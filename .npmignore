@@ -1,0 +1,12 @@
+.DS_Store
+.idea
+.gitignore
+.npmignore
+.babelrc
+
+node_modules
+
+src
+test
+webpack.config.js
+webpack.dev.config.js
