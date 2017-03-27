@@ -48,7 +48,14 @@ function ajaxFactory(method) {
     }
 
     const p = new Promise((resolve, reject) => {
-      req.addEventListener('load', () => resolve(JSON.parse(req.responseText)))
+      req.addEventListener('load', () => {
+        const data = JSON.parse(req.responseText)
+        if (data.message) {
+          reject(data.message)
+        } else {
+          resolve(data)
+        }
+      })
       req.addEventListener('error', error => reject(error))
     })
     req.open(method, url, true)
