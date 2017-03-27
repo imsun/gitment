@@ -17,3 +17,5 @@ const comments = new Comments({
 })
 
 comments.renderCommentsTo('container')
+
+module.exports = comments
