@@ -16,6 +16,6 @@ const comments = new Comments({
   },
 })
 
-comments.renderCommentsTo('container')
+comments.render('container')
 
 module.exports = comments

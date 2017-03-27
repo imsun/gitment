@@ -1,9 +1,36 @@
-import { http, Query } from './utils'
+import { autorun, extendObservable, observable } from 'mobx'
+
+import { ACCESS_TOKEN_KEY, getTargetContainer, http, Query } from './utils'
 import defaultTheme from './theme/default'
 
 const scope = 'public_repo'
 
+function extendRenderer(instance, componentName) {
+  const method = `render${componentName}`
+  instance[method] = (container) => {
+    const targetContainer = getTargetContainer(container)
+    const render = instance.theme[method] || instance.defaultTheme[method]
+
+    autorun(() => {
+      const e = render(instance.data, instance)
+      if (targetContainer.firstChild) {
+        targetContainer.replaceChild(e, targetContainer.firstChild)
+      } else {
+        targetContainer.appendChild(e)
+      }
+    })
+
+    return targetContainer
+  }
+}
+
 class Comments {
+  get accessToken() {
+    return localStorage.getItem(ACCESS_TOKEN_KEY)
+  }
+  set accessToken(token) {
+    localStorage.setItem(ACCESS_TOKEN_KEY, token)
+  }
   constructor(options = {}) {
     Object.assign(this, {
       id: window.location.href,
@@ -11,6 +38,14 @@ class Comments {
       defaultTheme: defaultTheme,
       oauth: {},
     }, options)
+
+    this.data = observable({
+      comments: undefined,
+      user: undefined,
+    })
+
+    const components = ['', 'Comments']
+    components.forEach(component => extendRenderer(this, component))
 
     const query = Query.parse()
     if (query.code) {
@@ -26,9 +61,27 @@ class Comments {
           client_secret,
         }, '')
         .then(data => {
-          localStorage.setItem('gh-comments-token', data.access_token)
+          this.accessToken = data.accessToken
+          this.loadUserInfo()
         })
     }
+    this.update()
+  }
+
+  update() {
+    return Promise.all([this.loadUserInfo(), this.load()])
+  }
+
+  loadUserInfo() {
+    if (this.accessToken) {
+      return http.get('/user')
+        .then((user) => {
+          this.data.user = user
+          return user
+        })
+    }
+    this.data.user = undefined
+    return Promise.resolve()
   }
 
   createIssue(options = {}) {
@@ -42,12 +95,11 @@ class Comments {
 
     labels.push(this.id)
 
-    http.post(`/repos/${owner}/${repo}/issues`, {
+    return http.post(`/repos/${owner}/${repo}/issues`, {
       title,
       labels,
       body: `${link}\n${desc}`,
     })
-      .then(data => console.log(data))
   }
 
   getIssue() {
@@ -69,6 +121,10 @@ class Comments {
   load() {
     return this.getIssue()
       .then(issue => http.get(issue.comments_url, {}, ''))
+      .then((comments) => {
+        this.data.comments = comments
+        return comments
+      })
   }
 
   login(oauthOptions = {}) {
@@ -80,16 +136,6 @@ class Comments {
     }, this.oauth, oauthOptions)
 
     window.location.href = `${oauthUri}${Query.stringify(oauthParams)}`
-  }
-
-  renderComments() {
-    if (this.theme.renderComments) return this.theme.renderComments(this)
-    return this.defaultTheme.renderComments(this)
-  }
-  renderCommentsTo(container) {
-    const e = container instanceof Element ? container : document.getElementById(container)
-    e.innerHTML = ''
-    return e.appendChild(this.renderComments())
   }
 }
 

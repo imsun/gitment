@@ -1,3 +1,20 @@
+export const ACCESS_TOKEN_KEY = 'gh-comments-token'
+
+export const isString = s => toString.call(s) === '[object String]'
+
+export function getTargetContainer(container) {
+  let targetContainer
+  if (container instanceof Element) {
+    targetContainer = container
+  } else if (isString(container)) {
+    targetContainer = document.getElementById(container)
+  } else {
+    targetContainer = document.createElement('div')
+  }
+
+  return targetContainer
+}
+
 export const Query = {
   parse(search = window.location.search) {
     if (!search) return {}
@@ -22,7 +39,7 @@ export const Query = {
 function ajaxFactory(method) {
   return function(apiPath, data = {}, base = 'https://api.github.com') {
     const req = new XMLHttpRequest()
-    const token = localStorage.getItem('gh-comments-token')
+    const token = localStorage.getItem(ACCESS_TOKEN_KEY)
 
     let url = `${base}${apiPath}`
     let body = null
