@@ -14,7 +14,7 @@ class Comments {
 
     const query = Query.parse()
     if (query.code) {
-      const { client_id, client_secret } = this.auth
+      const { client_id, client_secret } = this.oauth
       const code = query.code
       delete query.code
       const search = Query.stringify(query)
@@ -26,7 +26,6 @@ class Comments {
           client_secret,
         }, '')
         .then(data => {
-          console.log(data)
           localStorage.setItem('gh-comments-token', data.access_token)
         })
     }
@@ -72,7 +71,7 @@ class Comments {
       .then(issue => http.get(issue.comments_url, {}, ''))
   }
 
-  oauth(oauthOptions = {}) {
+  login(oauthOptions = {}) {
     const oauthUri = 'https://github.com/login/oauth/authorize'
     const redirect_uri = oauthOptions.redirect_uri || window.location.href
     const oauthParams = Object.assign({
