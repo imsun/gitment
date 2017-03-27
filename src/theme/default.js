@@ -42,10 +42,10 @@ function renderComments({ comments }) {
   return container
 }
 
-function render(data, instance) {
+function render(state, instance) {
   const container = document.createElement('div')
   container.className = 'gc-container'
-  container.appendChild(renderComments(data, instance))
+  container.appendChild(renderComments(state, instance))
   return container
 }
 

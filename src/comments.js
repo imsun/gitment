@@ -5,14 +5,13 @@ import defaultTheme from './theme/default'
 
 const scope = 'public_repo'
 
-function extendRenderer(instance, componentName) {
-  const method = `render${componentName}`
-  instance[method] = (container) => {
+function extendRenderer(instance, renderer) {
+  instance[renderer] = (container) => {
     const targetContainer = getTargetContainer(container)
-    const render = instance.theme[method] || instance.defaultTheme[method]
+    const render = instance.theme[renderer] || instance.defaultTheme[renderer]
 
     autorun(() => {
-      const e = render(instance.data, instance)
+      const e = render(instance.state, instance)
       if (targetContainer.firstChild) {
         targetContainer.replaceChild(e, targetContainer.firstChild)
       } else {
@@ -39,13 +38,13 @@ class Comments {
       oauth: {},
     }, options)
 
-    this.data = observable({
+    this.state = observable({
       comments: undefined,
       user: undefined,
     })
 
-    const components = ['', 'Comments']
-    components.forEach(component => extendRenderer(this, component))
+    const renderers = Object.keys(this.theme)
+    renderers.forEach(renderer => extendRenderer(this, renderer))
 
     const query = Query.parse()
     if (query.code) {
@@ -76,11 +75,11 @@ class Comments {
     if (this.accessToken) {
       return http.get('/user')
         .then((user) => {
-          this.data.user = user
+          this.state.user = user
           return user
         })
     }
-    this.data.user = undefined
+    this.state.user = undefined
     return Promise.resolve()
   }
 
@@ -122,7 +121,7 @@ class Comments {
     return this.getIssue()
       .then(issue => http.get(issue.comments_url, {}, ''))
       .then((comments) => {
-        this.data.comments = comments
+        this.state.comments = comments
         return comments
       })
   }
