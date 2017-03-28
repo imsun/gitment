@@ -1,9 +1,10 @@
+import marked from 'marked'
 import { autorun, extendObservable, observable } from 'mobx'
 
-import { ACCESS_TOKEN_KEY, getTargetContainer, http, Query } from './utils'
+import { LS_ACCESS_TOKEN_KEY, LS_USER_KEY, getTargetContainer, http, Query } from './utils'
 import defaultTheme from './theme/default'
 
-const scope = 'public_repo'
+const scope = 'repo'
 
 function extendRenderer(instance, renderer) {
   instance[renderer] = (container) => {
@@ -25,22 +26,49 @@ function extendRenderer(instance, renderer) {
 
 class Comments {
   get accessToken() {
-    return localStorage.getItem(ACCESS_TOKEN_KEY)
+    return localStorage.getItem(LS_ACCESS_TOKEN_KEY)
   }
   set accessToken(token) {
-    localStorage.setItem(ACCESS_TOKEN_KEY, token)
+    localStorage.setItem(LS_ACCESS_TOKEN_KEY, token)
   }
+
+  get loginLink() {
+    const oauthUri = 'https://github.com/login/oauth/authorize'
+    const redirect_uri = this.oauth.redirect_uri || window.location.href
+
+    const oauthParams = Object.assign({
+      scope,
+      redirect_uri,
+    }, this.oauth)
+
+    return `${oauthUri}${Query.stringify(oauthParams)}`
+  }
+
   constructor(options = {}) {
     Object.assign(this, {
+      marked,
+      defaultTheme,
       id: window.location.href,
       theme: defaultTheme,
-      defaultTheme: defaultTheme,
+      defaultAvatar: 'https://',
       oauth: {},
     }, options)
 
+    const user = {}
+    try {
+      const userInfo = localStorage.getItem(LS_USER_KEY)
+      if (this.accessToken && userInfo) {
+        Object.assign(user, JSON.parse(userInfo), {
+          fromCache: true,
+        })
+      }
+    } catch (e) {
+      localStorage.removeItem(LS_USER_KEY)
+    }
+
     this.state = observable({
+      user,
       comments: undefined,
-      user: undefined,
     })
 
     const renderers = Object.keys(this.theme)
@@ -60,11 +88,13 @@ class Comments {
           client_secret,
         }, '')
         .then(data => {
-          this.accessToken = data.accessToken
-          this.loadUserInfo()
+          this.accessToken = data.access_token
+          this.update()
         })
+        .catch(e => alert(e))
+    } else {
+      this.update()
     }
-    this.update()
   }
 
   update() {
@@ -76,10 +106,13 @@ class Comments {
       return http.get('/user')
         .then((user) => {
           this.state.user = user
+          localStorage.setItem(LS_USER_KEY, JSON.stringify(user))
+
           return user
         })
     }
-    this.state.user = undefined
+
+    this.logout()
     return Promise.resolve()
   }
 
@@ -124,17 +157,17 @@ class Comments {
         this.state.comments = comments
         return comments
       })
+      .catch(e => this.state.comments = e)
   }
 
-  login(oauthOptions = {}) {
-    const oauthUri = 'https://github.com/login/oauth/authorize'
-    const redirect_uri = oauthOptions.redirect_uri || window.location.href
-    const oauthParams = Object.assign({
-      scope,
-      redirect_uri,
-    }, this.oauth, oauthOptions)
+  login() {
+    window.location.href = this.loginLink
+  }
 
-    window.location.href = `${oauthUri}${Query.stringify(oauthParams)}`
+  logout() {
+    localStorage.removeItem(LS_ACCESS_TOKEN_KEY)
+    localStorage.removeItem(LS_USER_KEY)
+    this.state.user = {}
   }
 }
 

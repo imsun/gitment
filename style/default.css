@@ -1,6 +1,4 @@
-.gc-container,
-.gc-comments-container,
-.gc-editor-container {
+.gc-container {
   font-family: sans-serif;
   font-size: 14px;
   line-height: 1.5;
@@ -8,41 +6,60 @@
   word-wrap: break-word;
 }
 
-.gc-container *,
-.gc-comments-container *,
-.gc-editor-container * {
+.gc-container * {
   box-sizing: border-box;
 }
 
-.gc-container a,
-.gc-comments-container a,
-.gc-editor-container a {
+.gc-container *:disabled {
+  cursor: not-allowed;
+}
+
+.gc-container a {
   text-decoration: none;
 }
 
-.gc-container a:hover,
-.gc-comments-container a:hover,
-.gc-editor-container a:hover {
+.gc-container a:hover {
   text-decoration: underline;
 }
 
-.gc-container .hidden,
-.gc-comments-container .hidden,
-.gc-editor-container .hidden {
+.gc-container .hidden {
   display: none;
+}
+
+.gc-comments-loading,
+.gc-comments-error {
+  text-align: center;
+  margin: 19px 0;
 }
 
 .gc-comments-list {
   list-style: none;
   padding-left: 0;
   margin: 0;
+
+  border-bottom: 2px solid #e6ebf1;
 }
 
 .gc-comment,
 .gc-editor-container {
+  position: relative;
   min-height: 60px;
   padding-left: 60px;
-  margin: 15px 0;
+  margin: 19px 0;
+}
+
+.gc-comment::after {
+  position: absolute;
+  bottom: 0;
+  left: 79px;
+  z-index: -1;
+  display: block;
+  width: 2px;
+  content: "";
+  background-color: #e6ebf1;
+
+  height: 15px;
+  margin-bottom: -17px;
 }
 
 .gc-comment-avatar,
@@ -51,11 +68,19 @@
   margin-left: -60px;
 }
 
+.gc-comment-avatar,
 .gc-comment-avatar-img,
-.gc-editor-avatar-img {
+.gc-comment-avatar,
+.gc-editor-avatar-img,
+.gc-editor-avatar svg {
   width: 44px;
   height: 44px;
   border-radius: 3px;
+}
+
+.gc-editor-avatar svg {
+  fill: #fff;
+  background-color: #24292e;
 }
 
 .gc-comment-main,
@@ -140,6 +165,16 @@
   background-color: #fff;
   border-color: #d1d5da;
   border-radius: 3px 3px 0 0;
+}
+
+.gc-editor-login {
+  float: right;
+  margin-top: -30px;
+}
+
+.gc-editor-login-link,
+.gc-editor-login-link:visited {
+  color: #0366d6;
 }
 
 .gc-comment-body {
@@ -270,4 +305,6 @@ a.gc-editor-footer-tip:hover {
   background-image: none;
   border-color: rgba(27,31,35,0.2);
   box-shadow: none;
+
+  background-position: 0 0;
 }

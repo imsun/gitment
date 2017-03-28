@@ -1,4 +1,5 @@
-export const ACCESS_TOKEN_KEY = 'gh-comments-token'
+export const LS_ACCESS_TOKEN_KEY = 'gc-comments-token'
+export const LS_USER_KEY = 'gc-user-info'
 
 export const isString = s => toString.call(s) === '[object String]'
 
@@ -39,7 +40,7 @@ export const Query = {
 function ajaxFactory(method) {
   return function(apiPath, data = {}, base = 'https://api.github.com') {
     const req = new XMLHttpRequest()
-    const token = localStorage.getItem(ACCESS_TOKEN_KEY)
+    const token = localStorage.getItem(LS_ACCESS_TOKEN_KEY)
 
     let url = `${base}${apiPath}`
     let body = null
