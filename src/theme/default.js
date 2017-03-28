@@ -179,7 +179,7 @@ function renderEditor({ user }, instance) {
     const clientHeight = textarea.clientHeight
     const scrollHeight = textarea.scrollHeight
     if (clientHeight < scrollHeight) {
-      textarea.style.height = height + scrollHeight - clientHeight
+      textarea.style.height = (height + scrollHeight - clientHeight) + 'px'
     }
   }
 
