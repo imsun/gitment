@@ -1,5 +1,4 @@
-export const LS_ACCESS_TOKEN_KEY = 'gc-comments-token'
-export const LS_USER_KEY = 'gc-user-info'
+import { LS_ACCESS_TOKEN_KEY } from './constants'
 
 export const isString = s => toString.call(s) === '[object String]'
 
@@ -50,9 +49,9 @@ function ajaxFactory(method) {
 
     const p = new Promise((resolve, reject) => {
       req.addEventListener('load', () => {
-        const data = JSON.parse(req.responseText)
+        const data = req.responseText ? JSON.parse(req.responseText) : {}
         if (data.message) {
-          reject(data.message)
+          reject(new Error(data.message))
         } else {
           resolve(data)
         }
@@ -78,4 +77,6 @@ function ajaxFactory(method) {
 export const http = {
   get: ajaxFactory('GET'),
   post: ajaxFactory('POST'),
+  delete: ajaxFactory('DELETE'),
+  put: ajaxFactory('PUT'),
 }
