@@ -19,5 +19,6 @@ const comments = new Comments({
 comments.render('container')
 
 try {
+  window.http = require('./utils').http
   module.exports = comments
 } catch (e) {}
