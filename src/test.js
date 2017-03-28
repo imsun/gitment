@@ -18,4 +18,6 @@ const comments = new Comments({
 
 comments.render('container')
 
-module.exports = comments
+try {
+  module.exports = comments
+} catch (e) {}

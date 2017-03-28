@@ -2,17 +2,14 @@ const path = require('path')
 
 module.exports = {
   context: path.join(__dirname, 'src'),
-  entry: {
-    Comments: './comments.js',
-    test: './test.js',
-  },
+  entry: './test.js',
   devtool: 'source-map',
   output: {
     path: path.join(__dirname, 'dist'),
-    filename: '[name].browser.js',
+    filename: 'test.js',
     publicPath: '/dist/',
     libraryTarget: 'var',
-    library: "[name]",
+    library: "comments",
   },
   module: {
     loaders: [
