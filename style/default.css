@@ -14,7 +14,9 @@
   cursor: not-allowed;
 }
 
-.gc-container a {
+.gc-container a,
+.gc-container a:visited {
+  cursor: pointer;
   text-decoration: none;
 }
 
@@ -26,10 +28,60 @@
   display: none;
 }
 
-.gc-comments-loading,
-.gc-comments-error {
-  text-align: center;
+.gc-container .gc-spinner-icon {
+  fill: #24292e;
+
+  -webkit-animation: gc-spin 1s steps(12) infinite;
+  animation: gc-spin 1s steps(12) infinite;
+}
+
+@-webkit-keyframes gc-spin {
+  100% {
+    -webkit-transform: rotate(360deg);
+    transform: rotate(360deg)
+  }
+}
+
+@keyframes gc-spin {
+  100% {
+    -webkit-transform: rotate(360deg);
+    transform: rotate(360deg)
+  }
+}
+
+.gc-header-container {
   margin: 19px 0;
+}
+
+.gc-header-like-btn {
+  cursor: pointer;
+}
+
+.gc-header-like-btn svg {
+  vertical-align: middle;
+  height: 30px;
+}
+
+.gc-header-like-btn.liked svg {
+  fill: #f05f70;
+}
+
+a.gc-header-issue-link,
+a.gc-header-issue-link:visited {
+  float: right;
+  line-height: 30px;
+  color: #586069;
+}
+
+a.gc-header-issue-link:hover {
+  color: #586069;
+}
+
+.gc-comments-loading,
+.gc-comments-error,
+.gc-comments-empty {
+  text-align: center;
+  margin: 50px 0;
 }
 
 .gc-comments-list {
@@ -78,7 +130,7 @@
   border-radius: 3px;
 }
 
-.gc-editor-avatar svg {
+.gc-editor-avatar .gc-github-icon {
   fill: #fff;
   background-color: #24292e;
 }
@@ -133,7 +185,8 @@
   margin-bottom: 10px;
 }
 
-.gc-comment-name {
+a.gc-comment-name,
+a.gc-comment-name:visited {
   font-weight: 600;
   color: #586069;
 }
@@ -172,10 +225,23 @@
   margin-top: -30px;
 }
 
-.gc-editor-login-link,
-.gc-editor-login-link:visited {
+a.gc-footer-project-link,
+a.gc-footer-project-link:visited,
+a.gc-editor-login-link,
+a.gc-editor-login-link:visited {
   color: #0366d6;
 }
+
+a.gc-editor-logout-link,
+a.gc-editor-logout-link:visited {
+  color: #586069;
+}
+
+a.gc-editor-logout-link:hover {
+  color: #0366d6;
+  text-decoration: none;
+}
+
 
 .gc-comment-body {
   padding: 15px;
@@ -248,7 +314,7 @@
   content: " ";
 }
 
-.gc-editor-footer-tip {
+a.gc-editor-footer-tip {
   display: inline-block;
   padding-top: 10px;
   font-size: 12px;
@@ -260,9 +326,8 @@ a.gc-editor-footer-tip:hover {
   text-decoration: none;
 }
 
+.gc-comments-init-btn,
 .gc-editor-submit {
-  float: right;
-
   color: #fff;
   background-color: #28a745;
   background-image: -webkit-linear-gradient(270deg, #34d058 0%, #28a745 90%);
@@ -291,6 +356,7 @@ a.gc-editor-footer-tip:hover {
   appearance: none;
 }
 
+.gc-comments-init-btn:hover,
 .gc-editor-submit:hover {
   background-color: #269f42;
   background-image: -webkit-linear-gradient(270deg, #2fcb53 0%, #269f42 90%);
@@ -299,6 +365,7 @@ a.gc-editor-footer-tip:hover {
   border-color: rgba(27,31,35,0.5);
 }
 
+.gc-comments-init-btn:disabled,
 .gc-editor-submit:disabled {
   color: rgba(255,255,255,0.75);
   background-color: #94d3a2;
@@ -307,4 +374,12 @@ a.gc-editor-footer-tip:hover {
   box-shadow: none;
 
   background-position: 0 0;
+}
+
+.gc-editor-submit {
+  float: right;
+}
+
+.gc-footer-container {
+  text-align: right;
 }

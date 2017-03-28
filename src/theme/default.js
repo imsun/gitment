@@ -1,21 +1,82 @@
-import { isString } from '../utils'
-import { github as githubIcon } from '../icons'
+import { github as githubIcon, heart as heartIcon, spinner as spinnerIcon } from '../icons'
+import { NOT_INITIALIZED_ERROR } from '../constants'
 
-function renderComments({ comments }, instance) {
+function renderHeader({ meta, user, reactions }, instance) {
+  const container = document.createElement('div')
+  container.className = 'gc-container gc-header-container'
+
+  const likeButton = document.createElement('span')
+  const likedReaction = reactions.find(reaction => reaction.user.login === user.login)
+  likeButton.className = 'gc-header-like-btn'
+  likeButton.innerHTML = `
+    ${heartIcon}
+    ${ likedReaction
+      ? 'Unlike'
+      : 'Like'
+    }
+    ${ meta.reactions && meta.reactions.heart
+      ? ` • <strong>${meta.reactions.heart}</strong> Liked`
+      : ''
+    }
+  `
+  if (likedReaction) {
+    likeButton.classList.add('liked')
+    likeButton.onclick = () => instance.unlike()
+  } else {
+    likeButton.classList.remove('liked')
+    likeButton.onclick = () => instance.like()
+  }
+  container.appendChild(likeButton)
+
+  const issueLink = document.createElement('a')
+  issueLink.className = 'gc-header-issue-link'
+  issueLink.href = meta.html_url
+  issueLink.target = '_blank'
+  issueLink.innerText = 'Issue Page'
+  container.appendChild(issueLink)
+
+  return container
+}
+
+function renderComments({ comments, user, error }, instance) {
   const container = document.createElement('div')
   container.className = 'gc-container gc-comments-container'
 
-  if (comments === undefined) {
+  if (error) {
+    const errorBlock = document.createElement('div')
+    errorBlock.className = 'gc-comments-error'
+
+    if (error === NOT_INITIALIZED_ERROR && user.login === instance.owner) {
+      const initHint = document.createElement('div')
+      const initButton = document.createElement('button')
+      initButton.className = 'gc-comments-init-btn'
+      initButton.onclick = () => {
+        initButton.setAttribute('disabled', true)
+        instance.init()
+          .catch(e => {
+            initButton.removeAttribute('disabled')
+            alert(e)
+          })
+      }
+      initButton.innerText = 'Initialize Comments'
+      initHint.appendChild(initButton)
+      errorBlock.appendChild(initHint)
+    } else {
+      errorBlock.innerText = error
+    }
+    container.appendChild(errorBlock)
+    return container
+  } else if (comments === undefined) {
     const loading = document.createElement('div')
     loading.innerText = 'Loading comments...'
     loading.className = 'gc-comments-loading'
     container.appendChild(loading)
     return container
-  } else if (isString(comments)) {
-    const errorMessage = document.createElement('div')
-    errorMessage.className = 'gc-comments-error'
-    errorMessage.innerText = comments
-    container.appendChild(errorMessage)
+  } else if (!comments.length) {
+    const emptyBlock = document.createElement('div')
+    emptyBlock.className = 'gc-comments-empty'
+    emptyBlock.innerText = 'No Comment Yet'
+    container.appendChild(emptyBlock)
     return container
   }
 
@@ -59,14 +120,17 @@ function renderEditor({ user }, instance) {
   container.className = 'gc-container gc-editor-container'
 
   const shouldDisable = user.login ? '' : 'disabled'
+  const disabledTip = user.login ? '' : 'Login to Comment'
   container.innerHTML = `
-    <a class="gc-editor-avatar"
-      href="${user.html_url || instance.loginLink}"
-      ${user.login ? 'target="_blank"' : ''}
-      >
       ${ user.login
-        ? `<img class="gc-editor-avatar-img" src="${user.avatar_url}"/>`
-        : githubIcon
+        ? `<a class="gc-editor-avatar" href="${user.html_url} target="_blank">
+            <img class="gc-editor-avatar-img" src="${user.avatar_url}"/>
+          </a>`
+        : user.loginning
+          ? `<div class="gc-editor-avatar">${spinnerIcon}</div>`
+          : `<a class="gc-editor-avatar" href="${instance.loginLink}" title="login with GitHub">
+              ${githubIcon}
+            </a>`
       }
     </a>
     <div class="gc-editor-main">
@@ -77,14 +141,16 @@ function renderEditor({ user }, instance) {
         </nav>
         <div class="gc-editor-login">
           ${ user.login
-            ? '<a class="gc-editor-login-link" href="#">Logout</a>'
-            : `<a class="gc-editor-login-link" href="${instance.loginLink}">Login</a> with GitHub`
+            ? '<a class="gc-editor-logout-link">Logout</a>'
+            : user.loginning
+              ? 'Loginning...'
+              : `<a class="gc-editor-login-link" href="${instance.loginLink}">Login</a> with GitHub`
           }
         </div>
       </div>
       <div class="gc-editor-body">
         <div class="gc-editor-write-field">
-          <textarea placeholder="Leave a comment" ${shouldDisable}></textarea>
+          <textarea placeholder="Leave a comment" title="${disabledTip}" ${shouldDisable}></textarea>
         </div>
         <div class="gc-editor-preview-field hidden">
           <div class="gc-editor-preview"></div>
@@ -94,12 +160,12 @@ function renderEditor({ user }, instance) {
         <a class="gc-editor-footer-tip" href="https://guides.github.com/features/mastering-markdown/" target="_blank">
           Styling with Markdown is supported
         </a>
-        <button class="gc-editor-submit" ${shouldDisable}>Comment</button>
+        <button class="gc-editor-submit" title="${disabledTip}" ${shouldDisable}>Comment</button>
       </div>
     </div>
   `
   if (user.login) {
-    container.querySelector('.gc-editor-login-link').onclick = () => instance.logout()
+    container.querySelector('.gc-editor-logout-link').onclick = () => instance.logout()
   }
 
   const writeField = container.querySelector('.gc-editor-write-field')
@@ -138,28 +204,45 @@ function renderEditor({ user }, instance) {
 
   const submitButton = container.querySelector('.gc-editor-submit')
   submitButton.onclick = () => {
+    submitButton.innerText = 'Submitting...'
     submitButton.setAttribute('disabled', true)
     instance.post(textarea.value.trim())
       .then(data => {
         textarea.value = ''
         instance.state.comments.push(data)
         submitButton.removeAttribute('disabled')
+        submitButton.innerText = 'Comment'
       })
       .catch(e => {
         alert(e)
         submitButton.removeAttribute('disabled')
+        submitButton.innerText = 'Comment'
       })
   }
 
   return container
 }
 
-function render(state, instance) {
+function renderFooter() {
   const container = document.createElement('div')
-  container.className = 'gc-container gc-root-container'
-  container.appendChild(instance.renderComments(state, instance))
-  container.appendChild(instance.renderEditor(state, instance))
+  container.className = 'gc-container gc-footer-container'
+  container.innerHTML = `
+    Powered by
+    <a class="gc-footer-project-link" href="https://github.com/imsun/gh-comments" target="_blank">
+      gh-comments
+    </a>
+  `
   return container
 }
 
-export default { render, renderComments, renderEditor }
+function render(state, instance) {
+  const container = document.createElement('div')
+  container.className = 'gc-container gc-root-container'
+  container.appendChild(instance.renderHeader(state, instance))
+  container.appendChild(instance.renderComments(state, instance))
+  container.appendChild(instance.renderEditor(state, instance))
+  container.appendChild(instance.renderFooter(state, instance))
+  return container
+}
+
+export default { render, renderHeader, renderComments, renderEditor, renderFooter }

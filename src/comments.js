@@ -1,10 +1,15 @@
 import marked from 'marked'
 import { autorun, extendObservable, observable } from 'mobx'
 
-import { LS_ACCESS_TOKEN_KEY, LS_USER_KEY, getTargetContainer, http, Query } from './utils'
+import { LS_ACCESS_TOKEN_KEY, LS_USER_KEY, NOT_INITIALIZED_ERROR } from './constants'
+import { getTargetContainer, http, Query } from './utils'
 import defaultTheme from './theme/default'
 
 const scope = 'repo'
+
+marked.setOptions({
+  sanitize: true,
+})
 
 function extendRenderer(instance, renderer) {
   instance[renderer] = (container) => {
@@ -49,8 +54,11 @@ class Comments {
       marked,
       defaultTheme,
       id: window.location.href,
+      title: window.document.title,
+      link: window.location.href,
+      desc: '',
+      labels: [],
       theme: defaultTheme,
-      defaultAvatar: 'https://',
       oauth: {},
     }, options)
 
@@ -68,7 +76,10 @@ class Comments {
 
     this.state = observable({
       user,
+      error: null,
+      meta: {},
       comments: undefined,
+      reactions: [],
     })
 
     const renderers = Object.keys(this.theme)
@@ -82,6 +93,7 @@ class Comments {
       const search = Query.stringify(query)
       history.replaceState({}, '', `${window.location.origin}${window.location.pathname}${search}${window.location.hash}`)
 
+      this.state.user.loginning = true
       http.post('https://gh-oauth.imsun.net', {
           code,
           client_id,
@@ -91,63 +103,65 @@ class Comments {
           this.accessToken = data.access_token
           this.update()
         })
-        .catch(e => alert(e))
+        .catch(e => {
+          this.user.loginning = false
+          alert(e)
+        })
     } else {
       this.update()
     }
   }
 
+  init() {
+    return this.createIssue()
+      .then(() => this.load())
+  }
+
   update() {
-    return Promise.all([this.loadUserInfo(), this.load()])
+    return this.loadMeta()
+      .then(() => Promise.all([
+        this.loadUserInfo(),
+        this.load(),
+        this.loadReactions()
+      ]))
+      .catch(e => this.state.error = e)
   }
 
-  loadUserInfo() {
-    if (this.accessToken) {
-      return http.get('/user')
-        .then((user) => {
-          this.state.user = user
-          localStorage.setItem(LS_USER_KEY, JSON.stringify(user))
-
-          return user
-        })
-    }
-
-    this.logout()
-    return Promise.resolve()
-  }
-
-  createIssue(options = {}) {
-    const { owner, repo } = this
-    const { title, link, desc, labels } = Object.assign({
-      title: window.document.title,
-      link: window.location.href,
-      desc: '',
-      labels: [],
-    }, options)
-
-    labels.push(this.id)
+  createIssue() {
+    const { id, owner, repo, title, link, desc, labels } = this
 
     return http.post(`/repos/${owner}/${repo}/issues`, {
       title,
-      labels,
-      body: `${link}\n${desc}`,
+      labels: labels.concat([id]),
+      body: `${link}\n\n${desc}`,
     })
+      .then((meta) => {
+        this.state.meta = meta
+        return meta
+      })
   }
 
   getIssue() {
-    const { owner, repo } = this
-    return http.get(`/repos/${owner}/${repo}/issues`, {
-        labels: this.id,
-      })
-      .then(issues => {
-        if (!issues.length) return Promise.reject('Comments not initialized.')
-        return issues[0]
-      })
+    if (this.state.meta.id) return Promise.resolve(this.state.meta)
+
+    return this.loadMeta()
   }
 
   post(body) {
     return this.getIssue()
       .then(issue => http.post(issue.comments_url, { body }, ''))
+  }
+
+  loadMeta() {
+    const { owner, repo } = this
+    return http.get(`/repos/${owner}/${repo}/issues`, {
+        labels: this.id,
+      })
+      .then(issues => {
+        if (!issues.length) return Promise.reject(NOT_INITIALIZED_ERROR)
+        this.state.meta = issues[0]
+        return issues[0]
+      })
   }
 
   load() {
@@ -157,7 +171,31 @@ class Comments {
         this.state.comments = comments
         return comments
       })
-      .catch(e => this.state.comments = e)
+  }
+
+  loadUserInfo() {
+    if (!this.accessToken) {
+      this.logout()
+      return Promise.resolve({})
+    }
+
+    return http.get('/user')
+      .then((user) => {
+        this.state.user = user
+        localStorage.setItem(LS_USER_KEY, JSON.stringify(user))
+        return user
+      })
+  }
+
+  loadReactions() {
+    if (!this.accessToken) return Promise.resolve([])
+
+    return this.getIssue()
+      .then(issue => http.get(issue.reactions.url, {}, ''))
+      .then((reactions) => {
+        this.state.reactions = reactions
+        return reactions
+      })
   }
 
   login() {
@@ -168,6 +206,36 @@ class Comments {
     localStorage.removeItem(LS_ACCESS_TOKEN_KEY)
     localStorage.removeItem(LS_USER_KEY)
     this.state.user = {}
+  }
+
+  like() {
+    if (!this.accessToken) {
+      alert('Login to Like')
+      return Promise.reject()
+    }
+
+    const { owner, repo } = this
+
+    return http.post(`/repos/${owner}/${repo}/issues/${this.state.meta.number}/reactions`, {
+      content: 'heart',
+    })
+      .then(reaction => {
+        this.state.reactions.push(reaction)
+        this.state.meta.reactions.heart++
+      })
+  }
+
+  unlike() {
+    if (!this.accessToken) return Promise.reject()
+
+
+    const { user, reactions } = this.state
+    const index = reactions.findIndex(reaction => reaction.user.login === user.login)
+    return http.delete(`/reactions/${reactions[index].id}`)
+      .then(() => {
+        reactions.splice(index, 1)
+        this.state.meta.reactions.heart--
+      })
   }
 }
 
