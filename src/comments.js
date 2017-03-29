@@ -93,7 +93,13 @@ class Comments {
       const code = query.code
       delete query.code
       const search = Query.stringify(query)
-      history.replaceState({}, '', `${window.location.origin}${window.location.pathname}${search}${window.location.hash}`)
+      const replacedUrl = `${window.location.origin}${window.location.pathname}${search}${window.location.hash}`
+      history.replaceState({}, '', replacedUrl)
+
+      Object.assign(this, {
+        id: replacedUrl,
+        link: replacedUrl,
+      }, options)
 
       this.state.user.loginning = true
       http.post('https://gh-oauth.imsun.net', {
