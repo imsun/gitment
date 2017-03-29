@@ -1,4 +1,4 @@
-var Comments = Comments || require('./comments')
+var Gitment = Gitment || require('./gitment')
 
 const { client_id, client_secret } = window
 
@@ -6,7 +6,7 @@ if (!client_id || !client_secret) {
   throw new Error('You need to write your own client ID and client secret to `window` to run this test.')
 }
 
-const comments = new Comments({
+const gitment = new Gitment({
   id: 'test',
   owner: 'imsun',
   repo: 'test',
@@ -16,9 +16,9 @@ const comments = new Comments({
   },
 })
 
-comments.render('container')
+gitment.render('container')
 
 try {
   window.http = require('./utils').http
-  module.exports = comments
+  module.exports = gitment
 } catch (e) {}

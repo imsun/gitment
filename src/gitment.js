@@ -31,7 +31,7 @@ function extendRenderer(instance, renderer) {
   }
 }
 
-class Comments {
+class Gitment {
   get accessToken() {
     return localStorage.getItem(LS_ACCESS_TOKEN_KEY)
   }
@@ -122,7 +122,7 @@ class Comments {
 
   init() {
     return this.createIssue()
-      .then(() => this.load())
+      .then(() => this.loadComments())
       .then(comments => {
         this.state.error = null
         return comments
@@ -131,7 +131,7 @@ class Comments {
 
   update() {
     return Promise.all([this.loadMeta(), this.loadUserInfo()])
-      .then(() => Promise.all([this.load(), this.loadReactions()]))
+      .then(() => Promise.all([this.loadComments(), this.loadReactions()]))
       .catch(e => this.state.error = e)
   }
 
@@ -173,7 +173,7 @@ class Comments {
       })
   }
 
-  load() {
+  loadComments() {
     return this.getIssue()
       .then(issue => http.get(issue.comments_url, {}, ''))
       .then((comments) => {
@@ -248,4 +248,4 @@ class Comments {
   }
 }
 
-module.exports = Comments
+module.exports = Gitment
