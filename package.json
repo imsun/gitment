@@ -1,7 +1,7 @@
 {
-  "name": "gh-comments",
+  "name": "gitment",
   "version": "0.0.1",
-  "main": "./dist/comments.js",
+  "main": "./dist/gitment.js",
   "scripts": {
     "build": "babel src --out-dir dist --ignore test.js --source-maps & NODE_ENV=production webpack --config webpack.config.js --progress --profile --colors",
     "dev": "webpack-dev-server --config webpack.dev.config.js --progress --profile --colors"

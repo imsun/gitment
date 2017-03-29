@@ -3,11 +3,11 @@ import { NOT_INITIALIZED_ERROR } from '../constants'
 
 function renderHeader({ meta, user, reactions }, instance) {
   const container = document.createElement('div')
-  container.className = 'gc-container gc-header-container'
+  container.className = 'gitment-container gitment-header-container'
 
   const likeButton = document.createElement('span')
   const likedReaction = reactions.find(reaction => reaction.user.login === user.login)
-  likeButton.className = 'gc-header-like-btn'
+  likeButton.className = 'gitment-header-like-btn'
   likeButton.innerHTML = `
     ${heartIcon}
     ${ likedReaction
@@ -29,7 +29,7 @@ function renderHeader({ meta, user, reactions }, instance) {
   container.appendChild(likeButton)
 
   const issueLink = document.createElement('a')
-  issueLink.className = 'gc-header-issue-link'
+  issueLink.className = 'gitment-header-issue-link'
   issueLink.href = meta.html_url
   issueLink.target = '_blank'
   issueLink.innerText = 'Issue Page'
@@ -40,16 +40,16 @@ function renderHeader({ meta, user, reactions }, instance) {
 
 function renderComments({ comments, user, error }, instance) {
   const container = document.createElement('div')
-  container.className = 'gc-container gc-comments-container'
+  container.className = 'gitment-container gitment-comments-container'
 
   if (error) {
     const errorBlock = document.createElement('div')
-    errorBlock.className = 'gc-comments-error'
+    errorBlock.className = 'gitment-comments-error'
 
     if (error === NOT_INITIALIZED_ERROR && user.login === instance.owner) {
       const initHint = document.createElement('div')
       const initButton = document.createElement('button')
-      initButton.className = 'gc-comments-init-btn'
+      initButton.className = 'gitment-comments-init-btn'
       initButton.onclick = () => {
         initButton.setAttribute('disabled', true)
         instance.init()
@@ -69,32 +69,32 @@ function renderComments({ comments, user, error }, instance) {
   } else if (comments === undefined) {
     const loading = document.createElement('div')
     loading.innerText = 'Loading comments...'
-    loading.className = 'gc-comments-loading'
+    loading.className = 'gitment-comments-loading'
     container.appendChild(loading)
     return container
   } else if (!comments.length) {
     const emptyBlock = document.createElement('div')
-    emptyBlock.className = 'gc-comments-empty'
+    emptyBlock.className = 'gitment-comments-empty'
     emptyBlock.innerText = 'No Comment Yet'
     container.appendChild(emptyBlock)
     return container
   }
 
   const commentsList = document.createElement('ul')
-  commentsList.className = 'gc-comments-list'
+  commentsList.className = 'gitment-comments-list'
 
   comments.forEach(comment => {
     const createDate = new Date(comment.created_at)
     const updateDate = new Date(comment.updated_at)
     const commentItem = document.createElement('li')
-    commentItem.className = 'gc-comment'
+    commentItem.className = 'gitment-comment'
     commentItem.innerHTML = `
-      <a class="gc-comment-avatar" href="${comment.user.html_url}" target="_blank">
-        <img class="gc-comment-avatar-img" src="${comment.user.avatar_url}"/>
+      <a class="gitment-comment-avatar" href="${comment.user.html_url}" target="_blank">
+        <img class="gitment-comment-avatar-img" src="${comment.user.avatar_url}"/>
       </a>
-      <div class="gc-comment-main">
-        <div class="gc-comment-header">
-          <a class="gc-comment-name" href="${comment.user.html_url}" target="_blank">
+      <div class="gitment-comment-main">
+        <div class="gitment-comment-header">
+          <a class="gitment-comment-name" href="${comment.user.html_url}" target="_blank">
             ${comment.user.login}
           </a>
           commented on
@@ -104,7 +104,7 @@ function renderComments({ comments, user, error }, instance) {
             : ''
           }
         </div>
-        <div class="gc-comment-body">${instance.marked(comment.body)}</div>
+        <div class="gitment-comment-body">${instance.marked(comment.body)}</div>
       </div>
     `
     commentsList.appendChild(commentItem)
@@ -117,59 +117,59 @@ function renderComments({ comments, user, error }, instance) {
 
 function renderEditor({ user }, instance) {
   const container = document.createElement('div')
-  container.className = 'gc-container gc-editor-container'
+  container.className = 'gitment-container gitment-editor-container'
 
   const shouldDisable = user.login ? '' : 'disabled'
   const disabledTip = user.login ? '' : 'Login to Comment'
   container.innerHTML = `
       ${ user.login
-        ? `<a class="gc-editor-avatar" href="${user.html_url} target="_blank">
-            <img class="gc-editor-avatar-img" src="${user.avatar_url}"/>
+        ? `<a class="gitment-editor-avatar" href="${user.html_url} target="_blank">
+            <img class="gitment-editor-avatar-img" src="${user.avatar_url}"/>
           </a>`
         : user.loginning
-          ? `<div class="gc-editor-avatar">${spinnerIcon}</div>`
-          : `<a class="gc-editor-avatar" href="${instance.loginLink}" title="login with GitHub">
+          ? `<div class="gitment-editor-avatar">${spinnerIcon}</div>`
+          : `<a class="gitment-editor-avatar" href="${instance.loginLink}" title="login with GitHub">
               ${githubIcon}
             </a>`
       }
     </a>
-    <div class="gc-editor-main">
-      <div class="gc-editor-header">
-        <nav class="gc-editor-tabs">
-          <button class="gc-editor-tab selected">Write</button>
-          <button class="gc-editor-tab">Preview</button>
+    <div class="gitment-editor-main">
+      <div class="gitment-editor-header">
+        <nav class="gitment-editor-tabs">
+          <button class="gitment-editor-tab selected">Write</button>
+          <button class="gitment-editor-tab">Preview</button>
         </nav>
-        <div class="gc-editor-login">
+        <div class="gitment-editor-login">
           ${ user.login
-            ? '<a class="gc-editor-logout-link">Logout</a>'
+            ? '<a class="gitment-editor-logout-link">Logout</a>'
             : user.loginning
               ? 'Loginning...'
-              : `<a class="gc-editor-login-link" href="${instance.loginLink}">Login</a> with GitHub`
+              : `<a class="gitment-editor-login-link" href="${instance.loginLink}">Login</a> with GitHub`
           }
         </div>
       </div>
-      <div class="gc-editor-body">
-        <div class="gc-editor-write-field">
+      <div class="gitment-editor-body">
+        <div class="gitment-editor-write-field">
           <textarea placeholder="Leave a comment" title="${disabledTip}" ${shouldDisable}></textarea>
         </div>
-        <div class="gc-editor-preview-field hidden">
-          <div class="gc-editor-preview"></div>
+        <div class="gitment-editor-preview-field hidden">
+          <div class="gitment-editor-preview"></div>
         </div>
       </div>
-      <div class="gc-editor-footer">
-        <a class="gc-editor-footer-tip" href="https://guides.github.com/features/mastering-markdown/" target="_blank">
+      <div class="gitment-editor-footer">
+        <a class="gitment-editor-footer-tip" href="https://guides.github.com/features/mastering-markdown/" target="_blank">
           Styling with Markdown is supported
         </a>
-        <button class="gc-editor-submit" title="${disabledTip}" ${shouldDisable}>Comment</button>
+        <button class="gitment-editor-submit" title="${disabledTip}" ${shouldDisable}>Comment</button>
       </div>
     </div>
   `
   if (user.login) {
-    container.querySelector('.gc-editor-logout-link').onclick = () => instance.logout()
+    container.querySelector('.gitment-editor-logout-link').onclick = () => instance.logout()
   }
 
-  const writeField = container.querySelector('.gc-editor-write-field')
-  const previewField = container.querySelector('.gc-editor-preview-field')
+  const writeField = container.querySelector('.gitment-editor-write-field')
+  const previewField = container.querySelector('.gitment-editor-preview-field')
 
   const textarea = writeField.querySelector('textarea')
   textarea.oninput = () => {
@@ -183,7 +183,7 @@ function renderEditor({ user }, instance) {
     }
   }
 
-  const [writeTab, previewTab] = container.querySelectorAll('.gc-editor-tab')
+  const [writeTab, previewTab] = container.querySelectorAll('.gitment-editor-tab')
   writeTab.onclick = () => {
     writeTab.classList.add('selected')
     previewTab.classList.remove('selected')
@@ -199,10 +199,10 @@ function renderEditor({ user }, instance) {
     writeField.classList.add('hidden')
 
     const content = textarea.value.trim() || 'Nothing to preview'
-    previewField.querySelector('.gc-editor-preview').innerHTML = instance.marked(content)
+    previewField.querySelector('.gitment-editor-preview').innerHTML = instance.marked(content)
   }
 
-  const submitButton = container.querySelector('.gc-editor-submit')
+  const submitButton = container.querySelector('.gitment-editor-submit')
   submitButton.onclick = () => {
     submitButton.innerText = 'Submitting...'
     submitButton.setAttribute('disabled', true)
@@ -225,11 +225,11 @@ function renderEditor({ user }, instance) {
 
 function renderFooter() {
   const container = document.createElement('div')
-  container.className = 'gc-container gc-footer-container'
+  container.className = 'gitment-container gitment-footer-container'
   container.innerHTML = `
     Powered by
-    <a class="gc-footer-project-link" href="https://github.com/imsun/gh-comments" target="_blank">
-      gh-comments
+    <a class="gitment-footer-project-link" href="https://github.com/imsun/gitment" target="_blank">
+      Gitment
     </a>
   `
   return container
@@ -237,7 +237,7 @@ function renderFooter() {
 
 function render(state, instance) {
   const container = document.createElement('div')
-  container.className = 'gc-container gc-root-container'
+  container.className = 'gitment-container gitment-root-container'
   container.appendChild(instance.renderHeader(state, instance))
   container.appendChild(instance.renderComments(state, instance))
   container.appendChild(instance.renderEditor(state, instance))
