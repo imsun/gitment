@@ -104,7 +104,7 @@ function renderComments({ comments, user, error }, instance) {
             : ''
           }
         </div>
-        <div class="gitment-comment-body">${instance.marked(comment.body)}</div>
+        <div class="gitment-comment-body gitment-markdown">${instance.marked(comment.body)}</div>
       </div>
     `
     commentsList.appendChild(commentItem)
@@ -153,7 +153,7 @@ function renderEditor({ user }, instance) {
           <textarea placeholder="Leave a comment" title="${disabledTip}" ${shouldDisable}></textarea>
         </div>
         <div class="gitment-editor-preview-field hidden">
-          <div class="gitment-editor-preview"></div>
+          <div class="gitment-editor-preview gitment-markdown"></div>
         </div>
       </div>
       <div class="gitment-editor-footer">
