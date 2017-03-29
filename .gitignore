@@ -5,3 +5,4 @@ node_modules
 
 dist
 test/config.js
+index.html
