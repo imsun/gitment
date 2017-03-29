@@ -4493,7 +4493,13 @@ var Comments = function () {
       var code = query.code;
       delete query.code;
       var search = _utils.Query.stringify(query);
-      history.replaceState({}, '', '' + window.location.origin + window.location.pathname + search + window.location.hash);
+      var replacedUrl = '' + window.location.origin + window.location.pathname + search + window.location.hash;
+      history.replaceState({}, '', replacedUrl);
+
+      Object.assign(this, {
+        id: replacedUrl,
+        link: replacedUrl
+      }, options);
 
       this.state.user.loginning = true;
       _utils.http.post('https://gh-oauth.imsun.net', {
