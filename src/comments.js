@@ -8,6 +8,8 @@ import defaultTheme from './theme/default'
 const scope = 'repo'
 
 marked.setOptions({
+  breaks: true,
+  gfm: true,
   sanitize: true,
 })
 
@@ -115,15 +117,15 @@ class Comments {
   init() {
     return this.createIssue()
       .then(() => this.load())
+      .then(comments => {
+        this.state.error = null
+        return comments
+      })
   }
 
   update() {
-    return this.loadMeta()
-      .then(() => Promise.all([
-        this.loadUserInfo(),
-        this.load(),
-        this.loadReactions()
-      ]))
+    return Promise.all([this.loadMeta(), this.loadUserInfo()])
+      .then(() => Promise.all([this.load(), this.loadReactions()]))
       .catch(e => this.state.error = e)
   }
 
@@ -153,9 +155,10 @@ class Comments {
   }
 
   loadMeta() {
-    const { owner, repo } = this
+    const { id, owner, repo } = this
     return http.get(`/repos/${owner}/${repo}/issues`, {
-        labels: this.id,
+        creator: owner,
+        labels: id,
       })
       .then(issues => {
         if (!issues.length) return Promise.reject(NOT_INITIALIZED_ERROR)
