@@ -46,8 +46,8 @@ function extendRenderer(instance, renderer) {
   };
 }
 
-var Comments = function () {
-  _createClass(Comments, [{
+var Gitment = function () {
+  _createClass(Gitment, [{
     key: 'accessToken',
     get: function get() {
       return localStorage.getItem(_constants.LS_ACCESS_TOKEN_KEY);
@@ -70,12 +70,12 @@ var Comments = function () {
     }
   }]);
 
-  function Comments() {
+  function Gitment() {
     var _this = this;
 
     var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
 
-    _classCallCheck(this, Comments);
+    _classCallCheck(this, Gitment);
 
     Object.assign(this, {
       marked: _marked2.default,
@@ -148,13 +148,13 @@ var Comments = function () {
     }
   }
 
-  _createClass(Comments, [{
+  _createClass(Gitment, [{
     key: 'init',
     value: function init() {
       var _this2 = this;
 
       return this.createIssue().then(function () {
-        return _this2.load();
+        return _this2.loadComments();
       }).then(function (comments) {
         _this2.state.error = null;
         return comments;
@@ -166,7 +166,7 @@ var Comments = function () {
       var _this3 = this;
 
       return Promise.all([this.loadMeta(), this.loadUserInfo()]).then(function () {
-        return Promise.all([_this3.load(), _this3.loadReactions()]);
+        return Promise.all([_this3.loadComments(), _this3.loadReactions()]);
       }).catch(function (e) {
         return _this3.state.error = e;
       });
@@ -227,8 +227,8 @@ var Comments = function () {
       });
     }
   }, {
-    key: 'load',
-    value: function load() {
+    key: 'loadComments',
+    value: function loadComments() {
       var _this6 = this;
 
       return this.getIssue().then(function (issue) {
@@ -322,8 +322,8 @@ var Comments = function () {
     }
   }]);
 
-  return Comments;
+  return Gitment;
 }();
 
-module.exports = Comments;
-//# sourceMappingURL=comments.js.map
+module.exports = Gitment;
+//# sourceMappingURL=gitment.js.map

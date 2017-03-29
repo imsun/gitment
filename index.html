@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Demo Page</title>
+  <title>Gitment Demo Page</title>
   <link rel="stylesheet" href="./style/default.css">
   <style>
     body {
@@ -14,27 +14,27 @@
 </head>
 <body>
   <div>
-    <h1>gh-comments</h1>
-    <p>This is the demo page for <a href="https://github.com/imsun/gh-comments" target="_blank">gh-comments</a>.</p>
+    <h1>Gitment Demo</h1>
+    <p>This is the demo page for <a href="https://github.com/imsun/gitment" target="_blank">Gitment</a>.</p>
     <p>You can login with GitHub and leave your comments below.</p>
   </div>
   <div id="container"></div>
 
-  <script src="./dist/comments.browser.js"></script>
+  <script src="./dist/gitment.browser.js"></script>
   <script>
     var clientId = '82c800a8b9db1cb2a145'
     var clientSecret = 'abcb4790d98c686e7656d28c756ebbaac5b89d3a'
-    var comments = new Comments({
+    var gitment = new Gitment({
       id: 'demo page',
       owner: 'imsun',
-      repo: 'gh-comments',
+      repo: 'gitment',
       oauth: {
         client_id: clientId,
         client_secret: clientSecret,
       },
     })
 
-    comments.render('container')
+    gitment.render('container')
   </script>
 </body>
 </html>
