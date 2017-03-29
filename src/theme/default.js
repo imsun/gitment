@@ -123,7 +123,7 @@ function renderEditor({ user }, instance) {
   const disabledTip = user.login ? '' : 'Login to Comment'
   container.innerHTML = `
       ${ user.login
-        ? `<a class="gitment-editor-avatar" href="${user.html_url} target="_blank">
+        ? `<a class="gitment-editor-avatar" href="${user.html_url}" target="_blank">
             <img class="gitment-editor-avatar-img" src="${user.avatar_url}"/>
           </a>`
         : user.loginning
