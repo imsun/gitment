@@ -49,8 +49,13 @@
   }
 }
 
+.gc-root-container {
+  margin: 19px 0;
+}
+
 .gc-header-container {
   margin: 19px 0;
+  border-bottom: 2px solid #e6ebf1;
 }
 
 .gc-header-like-btn {
