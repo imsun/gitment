@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Demo Page</title>
+  <link rel="stylesheet" href="./style/default.css">
+  <style>
+    body {
+      margin: 0 auto;
+      width: 760px;
+      font-family: sans-serif;
+    }
+  </style>
+</head>
+<body>
+  <div>
+    <h1>gh-comments</h1>
+    <p>This is the demo page for <a href="https://github.com/imsun/gh-comments" target="_blank">gh-comments</a>.</p>
+    <p>You can login with GitHub and leave your comments below.</p>
+  </div>
+  <div id="container"></div>
+
+  <script src="./dist/comments.browser.js"></script>
+  <script>
+    var clientId = '82c800a8b9db1cb2a145'
+    var clientSecret = 'abcb4790d98c686e7656d28c756ebbaac5b89d3a'
+    var comments = new Comments({
+      id: 'demo page',
+      owner: 'imsun',
+      repo: 'gh-comments',
+      oauth: {
+        client_id: clientId,
+        client_secret: clientSecret,
+      },
+    })
+
+    comments.render('container')
+  </script>
+</body>
+</html>
