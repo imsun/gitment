@@ -136,7 +136,7 @@ function renderEditor({ user }, instance) {
     <div class="gitment-editor-main">
       <div class="gitment-editor-header">
         <nav class="gitment-editor-tabs">
-          <button class="gitment-editor-tab selected">Write</button>
+          <button class="gitment-editor-tab gitment-selected">Write</button>
           <button class="gitment-editor-tab">Preview</button>
         </nav>
         <div class="gitment-editor-login">
@@ -152,7 +152,7 @@ function renderEditor({ user }, instance) {
         <div class="gitment-editor-write-field">
           <textarea placeholder="Leave a comment" title="${disabledTip}" ${shouldDisable}></textarea>
         </div>
-        <div class="gitment-editor-preview-field hidden">
+        <div class="gitment-editor-preview-field gitment-hidden">
           <div class="gitment-editor-preview gitment-markdown"></div>
         </div>
       </div>
@@ -185,18 +185,18 @@ function renderEditor({ user }, instance) {
 
   const [writeTab, previewTab] = container.querySelectorAll('.gitment-editor-tab')
   writeTab.onclick = () => {
-    writeTab.classList.add('selected')
-    previewTab.classList.remove('selected')
-    writeField.classList.remove('hidden')
-    previewField.classList.add('hidden')
+    writeTab.classList.add('gitment-selected')
+    previewTab.classList.remove('gitment-selected')
+    writeField.classList.remove('gitment-hidden')
+    previewField.classList.add('gitment-hidden')
 
     textarea.focus()
   }
   previewTab.onclick = () => {
-    previewTab.classList.add('selected')
-    writeTab.classList.remove('selected')
-    previewField.classList.remove('hidden')
-    writeField.classList.add('hidden')
+    previewTab.classList.add('gitment-selected')
+    writeTab.classList.remove('gitment-selected')
+    previewField.classList.remove('gitment-hidden')
+    writeField.classList.add('gitment-hidden')
 
     const content = textarea.value.trim() || 'Nothing to preview'
     previewField.querySelector('.gitment-editor-preview').innerHTML = instance.marked(content)

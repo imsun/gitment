@@ -24,7 +24,7 @@
   text-decoration: underline;
 }
 
-.gitment-container .hidden {
+.gitment-container .gitment-hidden {
   display: none;
 }
 
@@ -218,7 +218,7 @@ a.gitment-comment-name:visited {
   outline: none;
 }
 
-.gitment-editor-tab.selected {
+.gitment-editor-tab.gitment-selected {
   color: #24292e;
   background-color: #fff;
   border-color: #d1d5da;
