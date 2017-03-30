@@ -104,7 +104,7 @@ function renderComments({ comments, user, error }, instance) {
             : ''
           }
         </div>
-        <div class="gitment-comment-body gitment-markdown">${instance.marked(comment.body)}</div>
+        <div class="gitment-comment-body gitment-markdown">${comment.body_html}</div>
       </div>
     `
     commentsList.appendChild(commentItem)
@@ -198,8 +198,16 @@ function renderEditor({ user }, instance) {
     previewField.classList.remove('gitment-hidden')
     writeField.classList.add('gitment-hidden')
 
-    const content = textarea.value.trim() || 'Nothing to preview'
-    previewField.querySelector('.gitment-editor-preview').innerHTML = instance.marked(content)
+    const preview = previewField.querySelector('.gitment-editor-preview')
+    const content = textarea.value.trim()
+    if (!content) {
+      preview.innerText = 'Nothing to preview'
+      return
+    }
+
+    preview.innerText = 'Loading preview...'
+    instance.markdown(content)
+      .then(html => preview.innerHTML = html)
   }
 
   const submitButton = container.querySelector('.gitment-editor-submit')

@@ -1,17 +1,10 @@
-import marked from 'marked'
-import { autorun, extendObservable, observable } from 'mobx'
+import { autorun, observable } from 'mobx'
 
 import { LS_ACCESS_TOKEN_KEY, LS_USER_KEY, NOT_INITIALIZED_ERROR } from './constants'
 import { getTargetContainer, http, Query } from './utils'
 import defaultTheme from './theme/default'
 
 const scope = 'repo'
-
-marked.setOptions({
-  breaks: true,
-  gfm: true,
-  sanitize: true,
-})
 
 function extendRenderer(instance, renderer) {
   instance[renderer] = (container) => {
@@ -53,7 +46,6 @@ class Gitment {
 
   constructor(options = {}) {
     Object.assign(this, {
-      marked,
       defaultTheme,
       id: window.location.href,
       title: window.document.title,
@@ -133,6 +125,13 @@ class Gitment {
     return Promise.all([this.loadMeta(), this.loadUserInfo()])
       .then(() => Promise.all([this.loadComments(), this.loadReactions()]))
       .catch(e => this.state.error = e)
+  }
+
+  markdown(text) {
+    return http.post('/markdown', {
+      text,
+      mode: 'gfm',
+    })
   }
 
   createIssue() {
