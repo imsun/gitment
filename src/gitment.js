@@ -187,7 +187,13 @@ class Gitment {
       return Promise.resolve({})
     }
 
+    const { owner, repo } = this
+
     return http.get('/user')
+      .then(user => {
+        return http.get(`/repos/${owner}/${repo}/collaborators/${user.login}/permission`)
+          .then(permission => Object.assign(user, { permission: permission.permission }))
+      })
       .then((user) => {
         this.state.user = user
         localStorage.setItem(LS_USER_KEY, JSON.stringify(user))
