@@ -8,8 +8,6 @@ module.exports = {
     path: path.join(__dirname, 'dist'),
     filename: 'test.js',
     publicPath: '/dist/',
-    libraryTarget: 'var',
-    library: "comments",
   },
   module: {
     loaders: [
