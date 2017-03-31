@@ -38,7 +38,7 @@ function renderHeader({ meta, user, reactions }, instance) {
   return container
 }
 
-function renderComments({ comments, user, error }, instance) {
+function renderComments({ meta, comments, currentPage, user, error }, instance) {
   const container = document.createElement('div')
   container.className = 'gitment-container gitment-comments-container'
 
@@ -112,6 +112,41 @@ function renderComments({ comments, user, error }, instance) {
   })
 
   container.appendChild(commentsList)
+
+  if (meta) {
+    let pageCount = Math.ceil(meta.comments / instance.perPage)
+    if (pageCount > 1) {
+      const pagination = document.createElement('ul')
+      pagination.className = 'gitment-comments-pagination'
+
+      if (currentPage > 1) {
+        const previousButton = document.createElement('li')
+        previousButton.className = 'gitment-comments-page-item'
+        previousButton.innerText = 'Previous'
+        previousButton.onclick = () => instance.goto(currentPage - 1)
+        pagination.appendChild(previousButton)
+      }
+
+      for (let i = 1; i <= pageCount; i++) {
+        const pageItem = document.createElement('li')
+        pageItem.className = 'gitment-comments-page-item'
+        pageItem.innerText = i
+        pageItem.onclick = () => instance.goto(i)
+        if (currentPage === i) pageItem.classList.add('gitment-selected')
+        pagination.appendChild(pageItem)
+      }
+
+      if (currentPage < pageCount) {
+        const nextButton = document.createElement('li')
+        nextButton.className = 'gitment-comments-page-item'
+        nextButton.innerText = 'Next'
+        nextButton.onclick = () => instance.goto(currentPage + 1)
+        pagination.appendChild(nextButton)
+      }
+
+      container.appendChild(pagination)
+    }
+  }
 
   return container
 }

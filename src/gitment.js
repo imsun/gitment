@@ -54,6 +54,7 @@ class Gitment {
       labels: [],
       theme: defaultTheme,
       oauth: {},
+      perPage: 30,
     }, options)
 
     const user = {}
@@ -74,6 +75,7 @@ class Gitment {
       meta: {},
       comments: undefined,
       reactions: [],
+      currentPage: 1,
     })
 
     const renderers = Object.keys(this.theme)
@@ -172,9 +174,9 @@ class Gitment {
       })
   }
 
-  loadComments() {
+  loadComments(page = this.state.currentPage) {
     return this.getIssue()
-      .then(issue => http.get(issue.comments_url, {}, ''))
+      .then(issue => http.get(issue.comments_url, { page, per_page: this.perPage }, ''))
       .then((comments) => {
         this.state.comments = comments
         return comments
@@ -220,6 +222,12 @@ class Gitment {
     localStorage.removeItem(LS_ACCESS_TOKEN_KEY)
     localStorage.removeItem(LS_USER_KEY)
     this.state.user = {}
+  }
+
+  goto(page) {
+    this.state.currentPage = page
+    this.state.comments = undefined
+    return this.loadComments(page)
   }
 
   like() {

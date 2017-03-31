@@ -331,6 +331,36 @@ a.gitment-editor-footer-tip:hover {
   text-decoration: none;
 }
 
+.gitment-comments-pagination {
+  list-style: none;
+  text-align: right;
+  border-radius: 3px;
+}
+
+.gitment-comments-page-item {
+  display: inline-block;
+  cursor: pointer;
+  border: 1px solid #d1d5da;
+  margin-left: -1px;
+  padding: .25rem .5rem;
+}
+
+.gitment-comments-page-item:hover {
+  background-color: #f6f8fa;
+}
+
+.gitment-comments-page-item.gitment-selected {
+  background-color: #f6f8fa;
+}
+
+.gitment-comments-page-item:first-child {
+  border-radius: 3px 0 0 3px;
+}
+
+.gitment-comments-page-item:last-child {
+  border-radius: 0 3px 3px 0;
+}
+
 .gitment-comments-init-btn,
 .gitment-editor-submit {
   color: #fff;
