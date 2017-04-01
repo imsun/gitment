@@ -207,7 +207,10 @@ class Gitment {
     if (!this.accessToken) return Promise.resolve([])
 
     return this.getIssue()
-      .then(issue => http.get(issue.reactions.url, {}, ''))
+      .then((issue) => {
+        if (!issue.reactions.heart) return []
+        return http.get(issue.reactions.url, { content: 'heart' }, '')
+      })
       .then((reactions) => {
         this.state.reactions = reactions
         return reactions
