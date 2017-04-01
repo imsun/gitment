@@ -38,7 +38,7 @@ function renderHeader({ meta, user, reactions }, instance) {
   return container
 }
 
-function renderComments({ meta, comments, currentPage, user, error }, instance) {
+function renderComments({ meta, comments, commentReactions, currentPage, user, error }, instance) {
   const container = document.createElement('div')
   container.className = 'gitment-container gitment-comments-container'
 
@@ -104,10 +104,21 @@ function renderComments({ meta, comments, currentPage, user, error }, instance) 
             ? ` • <span title="comment was edited at ${updateDate}">edited</span>`
             : ''
           }
+          <div class="gitment-comment-like-btn">${heartIcon} ${comment.reactions.heart || ''}</div>
         </div>
         <div class="gitment-comment-body gitment-markdown">${comment.body_html}</div>
       </div>
     `
+    const likeButton = commentItem.querySelector('.gitment-comment-like-btn')
+    const likedReaction = commentReactions[comment.id]
+      && commentReactions[comment.id].find(reaction => reaction.user.login === user.login)
+    if (likedReaction) {
+      likeButton.classList.add('liked')
+      likeButton.onclick = () => instance.unlikeAComment(comment.id)
+    } else {
+      likeButton.classList.remove('liked')
+      likeButton.onclick = () => instance.likeAComment(comment.id)
+    }
     commentsList.appendChild(commentItem)
   })
 

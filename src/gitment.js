@@ -79,6 +79,7 @@ class Gitment {
       meta: {},
       comments: undefined,
       reactions: [],
+      commentReactions: {},
       currentPage: 1,
     })
 
@@ -133,7 +134,10 @@ class Gitment {
 
   update() {
     return Promise.all([this.loadMeta(), this.loadUserInfo()])
-      .then(() => Promise.all([this.loadComments(), this.loadReactions()]))
+      .then(() => Promise.all([
+        this.loadComments().then(() => this.loadCommentReactions()),
+        this.loadReactions(),
+      ]))
       .catch(e => this.state.error = e)
   }
 
@@ -212,7 +216,10 @@ class Gitment {
   }
 
   loadReactions() {
-    if (!this.accessToken) return Promise.resolve([])
+    if (!this.accessToken) {
+      this.state.reactions = []
+      return Promise.resolve([])
+    }
 
     return this.getIssue()
       .then((issue) => {
@@ -222,6 +229,31 @@ class Gitment {
       .then((reactions) => {
         this.state.reactions = reactions
         return reactions
+      })
+  }
+
+  loadCommentReactions() {
+    if (!this.accessToken) {
+      this.state.commentReactions = {}
+      return Promise.resolve([])
+    }
+
+    const comments = this.state.comments
+    const comentReactions = {}
+
+    return Promise.all(comments.map((comment) => {
+      if (!comment.reactions.heart) return []
+
+      const { owner, repo } = this
+      return http.get(`/repos/${owner}/${repo}/issues/comments/${comment.id}/reactions`, { content: 'heart' })
+    }))
+      .then(reactionsArray => {
+        comments.forEach((comment, index) => {
+          comentReactions[comment.id] = reactionsArray[index]
+        })
+        this.state.commentReactions = comentReactions
+
+        return comentReactions
       })
   }
 
@@ -268,6 +300,39 @@ class Gitment {
       .then(() => {
         reactions.splice(index, 1)
         this.state.meta.reactions.heart--
+      })
+  }
+
+  likeAComment(commentId) {
+    if (!this.accessToken) {
+      alert('Login to Like')
+      return Promise.reject()
+    }
+
+    const { owner, repo } = this
+    const comment = this.state.comments.find(comment => comment.id === commentId)
+
+    return http.post(`/repos/${owner}/${repo}/issues/comments/${commentId}/reactions`, {
+      content: 'heart',
+    })
+      .then(reaction => {
+        this.state.commentReactions[commentId].push(reaction)
+        comment.reactions.heart++
+      })
+  }
+
+  unlikeAComment(commentId) {
+    if (!this.accessToken) return Promise.reject()
+
+    const reactions = this.state.commentReactions[commentId]
+    const comment = this.state.comments.find(comment => comment.id === commentId)
+    const { user } = this.state
+    const index = reactions.findIndex(reaction => reaction.user.login === user.login)
+
+    return http.delete(`/reactions/${reactions[index].id}`)
+      .then(() => {
+        reactions.splice(index, 1)
+        comment.reactions.heart--
       })
   }
 }

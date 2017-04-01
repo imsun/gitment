@@ -58,8 +58,13 @@
   border-bottom: 2px solid #e6ebf1;
 }
 
-.gitment-header-like-btn {
+.gitment-header-like-btn,
+.gitment-comment-like-btn {
   cursor: pointer;
+}
+
+.gitment-comment-like-btn {
+  float: right;
 }
 
 .gitment-header-like-btn svg {
@@ -67,7 +72,13 @@
   height: 30px;
 }
 
-.gitment-header-like-btn.liked svg {
+.gitment-comment-like-btn svg {
+  vertical-align: middle;
+  height: 20px;
+}
+
+.gitment-header-like-btn.liked svg,
+.gitment-comment-like-btn.liked svg {
   fill: #f05f70;
 }
 
@@ -416,6 +427,7 @@ a.gitment-editor-footer-tip:hover {
 }
 
 .gitment-footer-container {
+  margin: 19px 0;
   text-align: right;
 }
 
