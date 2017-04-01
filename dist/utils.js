@@ -72,7 +72,13 @@ function ajaxFactory(method) {
 
     var p = new Promise(function (resolve, reject) {
       req.addEventListener('load', function () {
-        var data = req.responseText ? JSON.parse(req.responseText) : {};
+        var contentType = req.getResponseHeader('content-type');
+        var res = req.responseText;
+        if (!/json/.test(contentType)) {
+          resolve(res);
+          return;
+        }
+        var data = req.responseText ? JSON.parse(res) : {};
         if (data.message) {
           reject(new Error(data.message));
         } else {
@@ -85,7 +91,7 @@ function ajaxFactory(method) {
     });
     req.open(method, url, true);
 
-    req.setRequestHeader('Accept', 'application/vnd.github.squirrel-girl-preview');
+    req.setRequestHeader('Accept', 'application/vnd.github.squirrel-girl-preview, application/vnd.github.html+json');
     if (token) {
       req.setRequestHeader('Authorization', 'token ' + token);
     }

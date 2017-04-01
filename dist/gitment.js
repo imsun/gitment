@@ -2,10 +2,6 @@
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-var _marked = require('marked');
-
-var _marked2 = _interopRequireDefault(_marked);
-
 var _mobx = require('mobx');
 
 var _constants = require('./constants');
@@ -21,12 +17,6 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 var scope = 'repo';
-
-_marked2.default.setOptions({
-  breaks: true,
-  gfm: true,
-  sanitize: true
-});
 
 function extendRenderer(instance, renderer) {
   instance[renderer] = function (container) {
@@ -77,17 +67,21 @@ var Gitment = function () {
 
     _classCallCheck(this, Gitment);
 
+    this.defaultTheme = _default2.default;
+    this.useTheme(_default2.default);
+
     Object.assign(this, {
-      marked: _marked2.default,
-      defaultTheme: _default2.default,
       id: window.location.href,
       title: window.document.title,
       link: window.location.href,
       desc: '',
       labels: [],
       theme: _default2.default,
-      oauth: {}
+      oauth: {},
+      perPage: 30
     }, options);
+
+    this.useTheme(this.theme);
 
     var user = {};
     try {
@@ -106,12 +100,9 @@ var Gitment = function () {
       error: null,
       meta: {},
       comments: undefined,
-      reactions: []
-    });
-
-    var renderers = Object.keys(this.theme);
-    renderers.forEach(function (renderer) {
-      return extendRenderer(_this, renderer);
+      reactions: [],
+      commentReactions: {},
+      currentPage: 1
     });
 
     var query = _utils.Query.parse();
@@ -161,20 +152,44 @@ var Gitment = function () {
       });
     }
   }, {
-    key: 'update',
-    value: function update() {
+    key: 'useTheme',
+    value: function useTheme() {
       var _this3 = this;
 
+      var theme = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+
+      this.theme = theme;
+
+      var renderers = Object.keys(this.theme);
+      renderers.forEach(function (renderer) {
+        return extendRenderer(_this3, renderer);
+      });
+    }
+  }, {
+    key: 'update',
+    value: function update() {
+      var _this4 = this;
+
       return Promise.all([this.loadMeta(), this.loadUserInfo()]).then(function () {
-        return Promise.all([_this3.loadComments(), _this3.loadReactions()]);
+        return Promise.all([_this4.loadComments().then(function () {
+          return _this4.loadCommentReactions();
+        }), _this4.loadReactions()]);
       }).catch(function (e) {
-        return _this3.state.error = e;
+        return _this4.state.error = e;
+      });
+    }
+  }, {
+    key: 'markdown',
+    value: function markdown(text) {
+      return _utils.http.post('/markdown', {
+        text: text,
+        mode: 'gfm'
       });
     }
   }, {
     key: 'createIssue',
     value: function createIssue() {
-      var _this4 = this;
+      var _this5 = this;
 
       var id = this.id,
           owner = this.owner,
@@ -187,10 +202,10 @@ var Gitment = function () {
 
       return _utils.http.post('/repos/' + owner + '/' + repo + '/issues', {
         title: title,
-        labels: labels.concat([id]),
+        labels: labels.concat(['gitment', id]),
         body: link + '\n\n' + desc
       }).then(function (meta) {
-        _this4.state.meta = meta;
+        _this5.state.meta = meta;
         return meta;
       });
     }
@@ -211,7 +226,7 @@ var Gitment = function () {
   }, {
     key: 'loadMeta',
     value: function loadMeta() {
-      var _this5 = this;
+      var _this6 = this;
 
       var id = this.id,
           owner = this.owner,
@@ -222,34 +237,44 @@ var Gitment = function () {
         labels: id
       }).then(function (issues) {
         if (!issues.length) return Promise.reject(_constants.NOT_INITIALIZED_ERROR);
-        _this5.state.meta = issues[0];
+        _this6.state.meta = issues[0];
         return issues[0];
       });
     }
   }, {
     key: 'loadComments',
     value: function loadComments() {
-      var _this6 = this;
+      var _this7 = this;
+
+      var page = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : this.state.currentPage;
 
       return this.getIssue().then(function (issue) {
-        return _utils.http.get(issue.comments_url, {}, '');
+        return _utils.http.get(issue.comments_url, { page: page, per_page: _this7.perPage }, '');
       }).then(function (comments) {
-        _this6.state.comments = comments;
+        _this7.state.comments = comments;
         return comments;
       });
     }
   }, {
     key: 'loadUserInfo',
     value: function loadUserInfo() {
-      var _this7 = this;
+      var _this8 = this;
 
       if (!this.accessToken) {
         this.logout();
         return Promise.resolve({});
       }
 
+      var owner = this.owner,
+          repo = this.repo;
+
+
       return _utils.http.get('/user').then(function (user) {
-        _this7.state.user = user;
+        return _utils.http.get('/repos/' + owner + '/' + repo + '/collaborators/' + user.login + '/permission').then(function (permission) {
+          return Object.assign(user, { permission: permission.permission });
+        });
+      }).then(function (user) {
+        _this8.state.user = user;
         localStorage.setItem(_constants.LS_USER_KEY, JSON.stringify(user));
         return user;
       });
@@ -257,15 +282,48 @@ var Gitment = function () {
   }, {
     key: 'loadReactions',
     value: function loadReactions() {
-      var _this8 = this;
+      var _this9 = this;
 
-      if (!this.accessToken) return Promise.resolve([]);
+      if (!this.accessToken) {
+        this.state.reactions = [];
+        return Promise.resolve([]);
+      }
 
       return this.getIssue().then(function (issue) {
-        return _utils.http.get(issue.reactions.url, {}, '');
+        if (!issue.reactions.heart) return [];
+        return _utils.http.get(issue.reactions.url, { content: 'heart' }, '');
       }).then(function (reactions) {
-        _this8.state.reactions = reactions;
+        _this9.state.reactions = reactions;
         return reactions;
+      });
+    }
+  }, {
+    key: 'loadCommentReactions',
+    value: function loadCommentReactions() {
+      var _this10 = this;
+
+      if (!this.accessToken) {
+        this.state.commentReactions = {};
+        return Promise.resolve([]);
+      }
+
+      var comments = this.state.comments;
+      var comentReactions = {};
+
+      return Promise.all(comments.map(function (comment) {
+        if (!comment.reactions.heart) return [];
+
+        var owner = _this10.owner,
+            repo = _this10.repo;
+
+        return _utils.http.get('/repos/' + owner + '/' + repo + '/issues/comments/' + comment.id + '/reactions', { content: 'heart' });
+      })).then(function (reactionsArray) {
+        comments.forEach(function (comment, index) {
+          comentReactions[comment.id] = reactionsArray[index];
+        });
+        _this10.state.commentReactions = comentReactions;
+
+        return comentReactions;
       });
     }
   }, {
@@ -281,9 +339,16 @@ var Gitment = function () {
       this.state.user = {};
     }
   }, {
+    key: 'goto',
+    value: function goto(page) {
+      this.state.currentPage = page;
+      this.state.comments = undefined;
+      return this.loadComments(page);
+    }
+  }, {
     key: 'like',
     value: function like() {
-      var _this9 = this;
+      var _this11 = this;
 
       if (!this.accessToken) {
         alert('Login to Like');
@@ -297,14 +362,14 @@ var Gitment = function () {
       return _utils.http.post('/repos/' + owner + '/' + repo + '/issues/' + this.state.meta.number + '/reactions', {
         content: 'heart'
       }).then(function (reaction) {
-        _this9.state.reactions.push(reaction);
-        _this9.state.meta.reactions.heart++;
+        _this11.state.reactions.push(reaction);
+        _this11.state.meta.reactions.heart++;
       });
     }
   }, {
     key: 'unlike',
     value: function unlike() {
-      var _this10 = this;
+      var _this12 = this;
 
       if (!this.accessToken) return Promise.reject();
 
@@ -317,7 +382,51 @@ var Gitment = function () {
       });
       return _utils.http.delete('/reactions/' + reactions[index].id).then(function () {
         reactions.splice(index, 1);
-        _this10.state.meta.reactions.heart--;
+        _this12.state.meta.reactions.heart--;
+      });
+    }
+  }, {
+    key: 'likeAComment',
+    value: function likeAComment(commentId) {
+      var _this13 = this;
+
+      if (!this.accessToken) {
+        alert('Login to Like');
+        return Promise.reject();
+      }
+
+      var owner = this.owner,
+          repo = this.repo;
+
+      var comment = this.state.comments.find(function (comment) {
+        return comment.id === commentId;
+      });
+
+      return _utils.http.post('/repos/' + owner + '/' + repo + '/issues/comments/' + commentId + '/reactions', {
+        content: 'heart'
+      }).then(function (reaction) {
+        _this13.state.commentReactions[commentId].push(reaction);
+        comment.reactions.heart++;
+      });
+    }
+  }, {
+    key: 'unlikeAComment',
+    value: function unlikeAComment(commentId) {
+      if (!this.accessToken) return Promise.reject();
+
+      var reactions = this.state.commentReactions[commentId];
+      var comment = this.state.comments.find(function (comment) {
+        return comment.id === commentId;
+      });
+      var user = this.state.user;
+
+      var index = reactions.findIndex(function (reaction) {
+        return reaction.user.login === user.login;
+      });
+
+      return _utils.http.delete('/reactions/' + reactions[index].id).then(function () {
+        reactions.splice(index, 1);
+        comment.reactions.heart--;
       });
     }
   }]);

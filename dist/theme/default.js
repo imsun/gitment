@@ -48,7 +48,10 @@ function renderHeader(_ref, instance) {
 }
 
 function renderComments(_ref2, instance) {
-  var comments = _ref2.comments,
+  var meta = _ref2.meta,
+      comments = _ref2.comments,
+      commentReactions = _ref2.commentReactions,
+      currentPage = _ref2.currentPage,
       user = _ref2.user,
       error = _ref2.error;
 
@@ -59,7 +62,7 @@ function renderComments(_ref2, instance) {
     var errorBlock = document.createElement('div');
     errorBlock.className = 'gitment-comments-error';
 
-    if (error === _constants.NOT_INITIALIZED_ERROR && user.login === instance.owner) {
+    if (error === _constants.NOT_INITIALIZED_ERROR && (user.permission === 'admin' || user.permission === 'write')) {
       var initHint = document.createElement('div');
       var initButton = document.createElement('button');
       initButton.className = 'gitment-comments-init-btn';
@@ -100,11 +103,71 @@ function renderComments(_ref2, instance) {
     var updateDate = new Date(comment.updated_at);
     var commentItem = document.createElement('li');
     commentItem.className = 'gitment-comment';
-    commentItem.innerHTML = '\n      <a class="gitment-comment-avatar" href="' + comment.user.html_url + '" target="_blank">\n        <img class="gitment-comment-avatar-img" src="' + comment.user.avatar_url + '"/>\n      </a>\n      <div class="gitment-comment-main">\n        <div class="gitment-comment-header">\n          <a class="gitment-comment-name" href="' + comment.user.html_url + '" target="_blank">\n            ' + comment.user.login + '\n          </a>\n          commented on\n          <span title="' + createDate + '">' + createDate.toDateString() + '</span>\n          ' + (createDate.toString() !== updateDate.toString() ? ' \u2022 <span title="comment was edited at ' + updateDate + '">edited</span>' : '') + '\n        </div>\n        <div class="gitment-comment-body gitment-markdown">' + instance.marked(comment.body) + '</div>\n      </div>\n    ';
+    commentItem.innerHTML = '\n      <a class="gitment-comment-avatar" href="' + comment.user.html_url + '" target="_blank">\n        <img class="gitment-comment-avatar-img" src="' + comment.user.avatar_url + '"/>\n      </a>\n      <div class="gitment-comment-main">\n        <div class="gitment-comment-header">\n          <a class="gitment-comment-name" href="' + comment.user.html_url + '" target="_blank">\n            ' + comment.user.login + '\n          </a>\n          commented on\n          <span title="' + createDate + '">' + createDate.toDateString() + '</span>\n          ' + (createDate.toString() !== updateDate.toString() ? ' \u2022 <span title="comment was edited at ' + updateDate + '">edited</span>' : '') + '\n          <div class="gitment-comment-like-btn">' + _icons.heart + ' ' + (comment.reactions.heart || '') + '</div>\n        </div>\n        <div class="gitment-comment-body gitment-markdown">' + comment.body_html + '</div>\n      </div>\n    ';
+    var likeButton = commentItem.querySelector('.gitment-comment-like-btn');
+    var likedReaction = commentReactions[comment.id] && commentReactions[comment.id].find(function (reaction) {
+      return reaction.user.login === user.login;
+    });
+    if (likedReaction) {
+      likeButton.classList.add('liked');
+      likeButton.onclick = function () {
+        return instance.unlikeAComment(comment.id);
+      };
+    } else {
+      likeButton.classList.remove('liked');
+      likeButton.onclick = function () {
+        return instance.likeAComment(comment.id);
+      };
+    }
     commentsList.appendChild(commentItem);
   });
 
   container.appendChild(commentsList);
+
+  if (meta) {
+    var pageCount = Math.ceil(meta.comments / instance.perPage);
+    if (pageCount > 1) {
+      var pagination = document.createElement('ul');
+      pagination.className = 'gitment-comments-pagination';
+
+      if (currentPage > 1) {
+        var previousButton = document.createElement('li');
+        previousButton.className = 'gitment-comments-page-item';
+        previousButton.innerText = 'Previous';
+        previousButton.onclick = function () {
+          return instance.goto(currentPage - 1);
+        };
+        pagination.appendChild(previousButton);
+      }
+
+      var _loop = function _loop(i) {
+        var pageItem = document.createElement('li');
+        pageItem.className = 'gitment-comments-page-item';
+        pageItem.innerText = i;
+        pageItem.onclick = function () {
+          return instance.goto(i);
+        };
+        if (currentPage === i) pageItem.classList.add('gitment-selected');
+        pagination.appendChild(pageItem);
+      };
+
+      for (var i = 1; i <= pageCount; i++) {
+        _loop(i);
+      }
+
+      if (currentPage < pageCount) {
+        var nextButton = document.createElement('li');
+        nextButton.className = 'gitment-comments-page-item';
+        nextButton.innerText = 'Next';
+        nextButton.onclick = function () {
+          return instance.goto(currentPage + 1);
+        };
+        pagination.appendChild(nextButton);
+      }
+
+      container.appendChild(pagination);
+    }
+  }
 
   return container;
 }
@@ -117,7 +180,7 @@ function renderEditor(_ref3, instance) {
 
   var shouldDisable = user.login ? '' : 'disabled';
   var disabledTip = user.login ? '' : 'Login to Comment';
-  container.innerHTML = '\n      ' + (user.login ? '<a class="gitment-editor-avatar" href="' + user.html_url + '" target="_blank">\n            <img class="gitment-editor-avatar-img" src="' + user.avatar_url + '"/>\n          </a>' : user.loginning ? '<div class="gitment-editor-avatar">' + _icons.spinner + '</div>' : '<a class="gitment-editor-avatar" href="' + instance.loginLink + '" title="login with GitHub">\n              ' + _icons.github + '\n            </a>') + '\n    </a>\n    <div class="gitment-editor-main">\n      <div class="gitment-editor-header">\n        <nav class="gitment-editor-tabs">\n          <button class="gitment-editor-tab selected">Write</button>\n          <button class="gitment-editor-tab">Preview</button>\n        </nav>\n        <div class="gitment-editor-login">\n          ' + (user.login ? '<a class="gitment-editor-logout-link">Logout</a>' : user.loginning ? 'Loginning...' : '<a class="gitment-editor-login-link" href="' + instance.loginLink + '">Login</a> with GitHub') + '\n        </div>\n      </div>\n      <div class="gitment-editor-body">\n        <div class="gitment-editor-write-field">\n          <textarea placeholder="Leave a comment" title="' + disabledTip + '" ' + shouldDisable + '></textarea>\n        </div>\n        <div class="gitment-editor-preview-field hidden">\n          <div class="gitment-editor-preview gitment-markdown"></div>\n        </div>\n      </div>\n      <div class="gitment-editor-footer">\n        <a class="gitment-editor-footer-tip" href="https://guides.github.com/features/mastering-markdown/" target="_blank">\n          Styling with Markdown is supported\n        </a>\n        <button class="gitment-editor-submit" title="' + disabledTip + '" ' + shouldDisable + '>Comment</button>\n      </div>\n    </div>\n  ';
+  container.innerHTML = '\n      ' + (user.login ? '<a class="gitment-editor-avatar" href="' + user.html_url + '" target="_blank">\n            <img class="gitment-editor-avatar-img" src="' + user.avatar_url + '"/>\n          </a>' : user.loginning ? '<div class="gitment-editor-avatar">' + _icons.spinner + '</div>' : '<a class="gitment-editor-avatar" href="' + instance.loginLink + '" title="login with GitHub">\n              ' + _icons.github + '\n            </a>') + '\n    </a>\n    <div class="gitment-editor-main">\n      <div class="gitment-editor-header">\n        <nav class="gitment-editor-tabs">\n          <button class="gitment-editor-tab gitment-selected">Write</button>\n          <button class="gitment-editor-tab">Preview</button>\n        </nav>\n        <div class="gitment-editor-login">\n          ' + (user.login ? '<a class="gitment-editor-logout-link">Logout</a>' : user.loginning ? 'Loginning...' : '<a class="gitment-editor-login-link" href="' + instance.loginLink + '">Login</a> with GitHub') + '\n        </div>\n      </div>\n      <div class="gitment-editor-body">\n        <div class="gitment-editor-write-field">\n          <textarea placeholder="Leave a comment" title="' + disabledTip + '" ' + shouldDisable + '></textarea>\n        </div>\n        <div class="gitment-editor-preview-field gitment-hidden">\n          <div class="gitment-editor-preview gitment-markdown"></div>\n        </div>\n      </div>\n      <div class="gitment-editor-footer">\n        <a class="gitment-editor-footer-tip" href="https://guides.github.com/features/mastering-markdown/" target="_blank">\n          Styling with Markdown is supported\n        </a>\n        <button class="gitment-editor-submit" title="' + disabledTip + '" ' + shouldDisable + '>Comment</button>\n      </div>\n    </div>\n  ';
   if (user.login) {
     container.querySelector('.gitment-editor-logout-link').onclick = function () {
       return instance.logout();
@@ -145,21 +208,30 @@ function renderEditor(_ref3, instance) {
       previewTab = _container$querySelec2[1];
 
   writeTab.onclick = function () {
-    writeTab.classList.add('selected');
-    previewTab.classList.remove('selected');
-    writeField.classList.remove('hidden');
-    previewField.classList.add('hidden');
+    writeTab.classList.add('gitment-selected');
+    previewTab.classList.remove('gitment-selected');
+    writeField.classList.remove('gitment-hidden');
+    previewField.classList.add('gitment-hidden');
 
     textarea.focus();
   };
   previewTab.onclick = function () {
-    previewTab.classList.add('selected');
-    writeTab.classList.remove('selected');
-    previewField.classList.remove('hidden');
-    writeField.classList.add('hidden');
+    previewTab.classList.add('gitment-selected');
+    writeTab.classList.remove('gitment-selected');
+    previewField.classList.remove('gitment-hidden');
+    writeField.classList.add('gitment-hidden');
 
-    var content = textarea.value.trim() || 'Nothing to preview';
-    previewField.querySelector('.gitment-editor-preview').innerHTML = instance.marked(content);
+    var preview = previewField.querySelector('.gitment-editor-preview');
+    var content = textarea.value.trim();
+    if (!content) {
+      preview.innerText = 'Nothing to preview';
+      return;
+    }
+
+    preview.innerText = 'Loading preview...';
+    instance.markdown(content).then(function (html) {
+      return preview.innerHTML = html;
+    });
   };
 
   var submitButton = container.querySelector('.gitment-editor-submit');

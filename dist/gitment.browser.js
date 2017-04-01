@@ -64,7 +64,7 @@ var Gitment =
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 6);
+/******/ 	return __webpack_require__(__webpack_require__.s = 5);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -84,1228 +84,6 @@ var NOT_INITIALIZED_ERROR = exports.NOT_INITIALIZED_ERROR = new Error('Comments 
 
 /***/ }),
 /* 1 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
-
-var g;
-
-// This works in non-strict mode
-g = function () {
-	return this;
-}();
-
-try {
-	// This works if eval is allowed (see CSP)
-	g = g || Function("return this")() || (1, eval)("this");
-} catch (e) {
-	// This works if the window reference is available
-	if ((typeof window === "undefined" ? "undefined" : _typeof(window)) === "object") g = window;
-}
-
-// g can still be undefined, but nothing to do about it...
-// We return undefined, instead of nothing here, so it's
-// easier to handle this case. if(!global) { ...}
-
-module.exports = g;
-
-/***/ }),
-/* 2 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-/* WEBPACK VAR INJECTION */(function(global) {var __WEBPACK_AMD_DEFINE_RESULT__;
-
-var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
-
-/**
- * marked - a markdown parser
- * Copyright (c) 2011-2014, Christopher Jeffrey. (MIT Licensed)
- * https://github.com/chjj/marked
- */
-
-;(function () {
-
-  /**
-   * Block-Level Grammar
-   */
-
-  var block = {
-    newline: /^\n+/,
-    code: /^( {4}[^\n]+\n*)+/,
-    fences: noop,
-    hr: /^( *[-*_]){3,} *(?:\n+|$)/,
-    heading: /^ *(#{1,6}) *([^\n]+?) *#* *(?:\n+|$)/,
-    nptable: noop,
-    lheading: /^([^\n]+)\n *(=|-){2,} *(?:\n+|$)/,
-    blockquote: /^( *>[^\n]+(\n(?!def)[^\n]+)*\n*)+/,
-    list: /^( *)(bull) [\s\S]+?(?:hr|def|\n{2,}(?! )(?!\1bull )\n*|\s*$)/,
-    html: /^ *(?:comment *(?:\n|\s*$)|closed *(?:\n{2,}|\s*$)|closing *(?:\n{2,}|\s*$))/,
-    def: /^ *\[([^\]]+)\]: *<?([^\s>]+)>?(?: +["(]([^\n]+)[")])? *(?:\n+|$)/,
-    table: noop,
-    paragraph: /^((?:[^\n]+\n?(?!hr|heading|lheading|blockquote|tag|def))+)\n*/,
-    text: /^[^\n]+/
-  };
-
-  block.bullet = /(?:[*+-]|\d+\.)/;
-  block.item = /^( *)(bull) [^\n]*(?:\n(?!\1bull )[^\n]*)*/;
-  block.item = replace(block.item, 'gm')(/bull/g, block.bullet)();
-
-  block.list = replace(block.list)(/bull/g, block.bullet)('hr', '\\n+(?=\\1?(?:[-*_] *){3,}(?:\\n+|$))')('def', '\\n+(?=' + block.def.source + ')')();
-
-  block.blockquote = replace(block.blockquote)('def', block.def)();
-
-  block._tag = '(?!(?:' + 'a|em|strong|small|s|cite|q|dfn|abbr|data|time|code' + '|var|samp|kbd|sub|sup|i|b|u|mark|ruby|rt|rp|bdi|bdo' + '|span|br|wbr|ins|del|img)\\b)\\w+(?!:/|[^\\w\\s@]*@)\\b';
-
-  block.html = replace(block.html)('comment', /<!--[\s\S]*?-->/)('closed', /<(tag)[\s\S]+?<\/\1>/)('closing', /<tag(?:"[^"]*"|'[^']*'|[^'">])*?>/)(/tag/g, block._tag)();
-
-  block.paragraph = replace(block.paragraph)('hr', block.hr)('heading', block.heading)('lheading', block.lheading)('blockquote', block.blockquote)('tag', '<' + block._tag)('def', block.def)();
-
-  /**
-   * Normal Block Grammar
-   */
-
-  block.normal = merge({}, block);
-
-  /**
-   * GFM Block Grammar
-   */
-
-  block.gfm = merge({}, block.normal, {
-    fences: /^ *(`{3,}|~{3,})[ \.]*(\S+)? *\n([\s\S]*?)\s*\1 *(?:\n+|$)/,
-    paragraph: /^/,
-    heading: /^ *(#{1,6}) +([^\n]+?) *#* *(?:\n+|$)/
-  });
-
-  block.gfm.paragraph = replace(block.paragraph)('(?!', '(?!' + block.gfm.fences.source.replace('\\1', '\\2') + '|' + block.list.source.replace('\\1', '\\3') + '|')();
-
-  /**
-   * GFM + Tables Block Grammar
-   */
-
-  block.tables = merge({}, block.gfm, {
-    nptable: /^ *(\S.*\|.*)\n *([-:]+ *\|[-| :]*)\n((?:.*\|.*(?:\n|$))*)\n*/,
-    table: /^ *\|(.+)\n *\|( *[-:]+[-| :]*)\n((?: *\|.*(?:\n|$))*)\n*/
-  });
-
-  /**
-   * Block Lexer
-   */
-
-  function Lexer(options) {
-    this.tokens = [];
-    this.tokens.links = {};
-    this.options = options || marked.defaults;
-    this.rules = block.normal;
-
-    if (this.options.gfm) {
-      if (this.options.tables) {
-        this.rules = block.tables;
-      } else {
-        this.rules = block.gfm;
-      }
-    }
-  }
-
-  /**
-   * Expose Block Rules
-   */
-
-  Lexer.rules = block;
-
-  /**
-   * Static Lex Method
-   */
-
-  Lexer.lex = function (src, options) {
-    var lexer = new Lexer(options);
-    return lexer.lex(src);
-  };
-
-  /**
-   * Preprocessing
-   */
-
-  Lexer.prototype.lex = function (src) {
-    src = src.replace(/\r\n|\r/g, '\n').replace(/\t/g, '    ').replace(/\u00a0/g, ' ').replace(/\u2424/g, '\n');
-
-    return this.token(src, true);
-  };
-
-  /**
-   * Lexing
-   */
-
-  Lexer.prototype.token = function (src, top, bq) {
-    var src = src.replace(/^ +$/gm, ''),
-        next,
-        loose,
-        cap,
-        bull,
-        b,
-        item,
-        space,
-        i,
-        l;
-
-    while (src) {
-      // newline
-      if (cap = this.rules.newline.exec(src)) {
-        src = src.substring(cap[0].length);
-        if (cap[0].length > 1) {
-          this.tokens.push({
-            type: 'space'
-          });
-        }
-      }
-
-      // code
-      if (cap = this.rules.code.exec(src)) {
-        src = src.substring(cap[0].length);
-        cap = cap[0].replace(/^ {4}/gm, '');
-        this.tokens.push({
-          type: 'code',
-          text: !this.options.pedantic ? cap.replace(/\n+$/, '') : cap
-        });
-        continue;
-      }
-
-      // fences (gfm)
-      if (cap = this.rules.fences.exec(src)) {
-        src = src.substring(cap[0].length);
-        this.tokens.push({
-          type: 'code',
-          lang: cap[2],
-          text: cap[3] || ''
-        });
-        continue;
-      }
-
-      // heading
-      if (cap = this.rules.heading.exec(src)) {
-        src = src.substring(cap[0].length);
-        this.tokens.push({
-          type: 'heading',
-          depth: cap[1].length,
-          text: cap[2]
-        });
-        continue;
-      }
-
-      // table no leading pipe (gfm)
-      if (top && (cap = this.rules.nptable.exec(src))) {
-        src = src.substring(cap[0].length);
-
-        item = {
-          type: 'table',
-          header: cap[1].replace(/^ *| *\| *$/g, '').split(/ *\| */),
-          align: cap[2].replace(/^ *|\| *$/g, '').split(/ *\| */),
-          cells: cap[3].replace(/\n$/, '').split('\n')
-        };
-
-        for (i = 0; i < item.align.length; i++) {
-          if (/^ *-+: *$/.test(item.align[i])) {
-            item.align[i] = 'right';
-          } else if (/^ *:-+: *$/.test(item.align[i])) {
-            item.align[i] = 'center';
-          } else if (/^ *:-+ *$/.test(item.align[i])) {
-            item.align[i] = 'left';
-          } else {
-            item.align[i] = null;
-          }
-        }
-
-        for (i = 0; i < item.cells.length; i++) {
-          item.cells[i] = item.cells[i].split(/ *\| */);
-        }
-
-        this.tokens.push(item);
-
-        continue;
-      }
-
-      // lheading
-      if (cap = this.rules.lheading.exec(src)) {
-        src = src.substring(cap[0].length);
-        this.tokens.push({
-          type: 'heading',
-          depth: cap[2] === '=' ? 1 : 2,
-          text: cap[1]
-        });
-        continue;
-      }
-
-      // hr
-      if (cap = this.rules.hr.exec(src)) {
-        src = src.substring(cap[0].length);
-        this.tokens.push({
-          type: 'hr'
-        });
-        continue;
-      }
-
-      // blockquote
-      if (cap = this.rules.blockquote.exec(src)) {
-        src = src.substring(cap[0].length);
-
-        this.tokens.push({
-          type: 'blockquote_start'
-        });
-
-        cap = cap[0].replace(/^ *> ?/gm, '');
-
-        // Pass `top` to keep the current
-        // "toplevel" state. This is exactly
-        // how markdown.pl works.
-        this.token(cap, top, true);
-
-        this.tokens.push({
-          type: 'blockquote_end'
-        });
-
-        continue;
-      }
-
-      // list
-      if (cap = this.rules.list.exec(src)) {
-        src = src.substring(cap[0].length);
-        bull = cap[2];
-
-        this.tokens.push({
-          type: 'list_start',
-          ordered: bull.length > 1
-        });
-
-        // Get each top-level item.
-        cap = cap[0].match(this.rules.item);
-
-        next = false;
-        l = cap.length;
-        i = 0;
-
-        for (; i < l; i++) {
-          item = cap[i];
-
-          // Remove the list item's bullet
-          // so it is seen as the next token.
-          space = item.length;
-          item = item.replace(/^ *([*+-]|\d+\.) +/, '');
-
-          // Outdent whatever the
-          // list item contains. Hacky.
-          if (~item.indexOf('\n ')) {
-            space -= item.length;
-            item = !this.options.pedantic ? item.replace(new RegExp('^ {1,' + space + '}', 'gm'), '') : item.replace(/^ {1,4}/gm, '');
-          }
-
-          // Determine whether the next list item belongs here.
-          // Backpedal if it does not belong in this list.
-          if (this.options.smartLists && i !== l - 1) {
-            b = block.bullet.exec(cap[i + 1])[0];
-            if (bull !== b && !(bull.length > 1 && b.length > 1)) {
-              src = cap.slice(i + 1).join('\n') + src;
-              i = l - 1;
-            }
-          }
-
-          // Determine whether item is loose or not.
-          // Use: /(^|\n)(?! )[^\n]+\n\n(?!\s*$)/
-          // for discount behavior.
-          loose = next || /\n\n(?!\s*$)/.test(item);
-          if (i !== l - 1) {
-            next = item.charAt(item.length - 1) === '\n';
-            if (!loose) loose = next;
-          }
-
-          this.tokens.push({
-            type: loose ? 'loose_item_start' : 'list_item_start'
-          });
-
-          // Recurse.
-          this.token(item, false, bq);
-
-          this.tokens.push({
-            type: 'list_item_end'
-          });
-        }
-
-        this.tokens.push({
-          type: 'list_end'
-        });
-
-        continue;
-      }
-
-      // html
-      if (cap = this.rules.html.exec(src)) {
-        src = src.substring(cap[0].length);
-        this.tokens.push({
-          type: this.options.sanitize ? 'paragraph' : 'html',
-          pre: !this.options.sanitizer && (cap[1] === 'pre' || cap[1] === 'script' || cap[1] === 'style'),
-          text: cap[0]
-        });
-        continue;
-      }
-
-      // def
-      if (!bq && top && (cap = this.rules.def.exec(src))) {
-        src = src.substring(cap[0].length);
-        this.tokens.links[cap[1].toLowerCase()] = {
-          href: cap[2],
-          title: cap[3]
-        };
-        continue;
-      }
-
-      // table (gfm)
-      if (top && (cap = this.rules.table.exec(src))) {
-        src = src.substring(cap[0].length);
-
-        item = {
-          type: 'table',
-          header: cap[1].replace(/^ *| *\| *$/g, '').split(/ *\| */),
-          align: cap[2].replace(/^ *|\| *$/g, '').split(/ *\| */),
-          cells: cap[3].replace(/(?: *\| *)?\n$/, '').split('\n')
-        };
-
-        for (i = 0; i < item.align.length; i++) {
-          if (/^ *-+: *$/.test(item.align[i])) {
-            item.align[i] = 'right';
-          } else if (/^ *:-+: *$/.test(item.align[i])) {
-            item.align[i] = 'center';
-          } else if (/^ *:-+ *$/.test(item.align[i])) {
-            item.align[i] = 'left';
-          } else {
-            item.align[i] = null;
-          }
-        }
-
-        for (i = 0; i < item.cells.length; i++) {
-          item.cells[i] = item.cells[i].replace(/^ *\| *| *\| *$/g, '').split(/ *\| */);
-        }
-
-        this.tokens.push(item);
-
-        continue;
-      }
-
-      // top-level paragraph
-      if (top && (cap = this.rules.paragraph.exec(src))) {
-        src = src.substring(cap[0].length);
-        this.tokens.push({
-          type: 'paragraph',
-          text: cap[1].charAt(cap[1].length - 1) === '\n' ? cap[1].slice(0, -1) : cap[1]
-        });
-        continue;
-      }
-
-      // text
-      if (cap = this.rules.text.exec(src)) {
-        // Top-level should never reach here.
-        src = src.substring(cap[0].length);
-        this.tokens.push({
-          type: 'text',
-          text: cap[0]
-        });
-        continue;
-      }
-
-      if (src) {
-        throw new Error('Infinite loop on byte: ' + src.charCodeAt(0));
-      }
-    }
-
-    return this.tokens;
-  };
-
-  /**
-   * Inline-Level Grammar
-   */
-
-  var inline = {
-    escape: /^\\([\\`*{}\[\]()#+\-.!_>])/,
-    autolink: /^<([^ >]+(@|:\/)[^ >]+)>/,
-    url: noop,
-    tag: /^<!--[\s\S]*?-->|^<\/?\w+(?:"[^"]*"|'[^']*'|[^'">])*?>/,
-    link: /^!?\[(inside)\]\(href\)/,
-    reflink: /^!?\[(inside)\]\s*\[([^\]]*)\]/,
-    nolink: /^!?\[((?:\[[^\]]*\]|[^\[\]])*)\]/,
-    strong: /^__([\s\S]+?)__(?!_)|^\*\*([\s\S]+?)\*\*(?!\*)/,
-    em: /^\b_((?:[^_]|__)+?)_\b|^\*((?:\*\*|[\s\S])+?)\*(?!\*)/,
-    code: /^(`+)\s*([\s\S]*?[^`])\s*\1(?!`)/,
-    br: /^ {2,}\n(?!\s*$)/,
-    del: noop,
-    text: /^[\s\S]+?(?=[\\<!\[_*`]| {2,}\n|$)/
-  };
-
-  inline._inside = /(?:\[[^\]]*\]|[^\[\]]|\](?=[^\[]*\]))*/;
-  inline._href = /\s*<?([\s\S]*?)>?(?:\s+['"]([\s\S]*?)['"])?\s*/;
-
-  inline.link = replace(inline.link)('inside', inline._inside)('href', inline._href)();
-
-  inline.reflink = replace(inline.reflink)('inside', inline._inside)();
-
-  /**
-   * Normal Inline Grammar
-   */
-
-  inline.normal = merge({}, inline);
-
-  /**
-   * Pedantic Inline Grammar
-   */
-
-  inline.pedantic = merge({}, inline.normal, {
-    strong: /^__(?=\S)([\s\S]*?\S)__(?!_)|^\*\*(?=\S)([\s\S]*?\S)\*\*(?!\*)/,
-    em: /^_(?=\S)([\s\S]*?\S)_(?!_)|^\*(?=\S)([\s\S]*?\S)\*(?!\*)/
-  });
-
-  /**
-   * GFM Inline Grammar
-   */
-
-  inline.gfm = merge({}, inline.normal, {
-    escape: replace(inline.escape)('])', '~|])')(),
-    url: /^(https?:\/\/[^\s<]+[^<.,:;"')\]\s])/,
-    del: /^~~(?=\S)([\s\S]*?\S)~~/,
-    text: replace(inline.text)(']|', '~]|')('|', '|https?://|')()
-  });
-
-  /**
-   * GFM + Line Breaks Inline Grammar
-   */
-
-  inline.breaks = merge({}, inline.gfm, {
-    br: replace(inline.br)('{2,}', '*')(),
-    text: replace(inline.gfm.text)('{2,}', '*')()
-  });
-
-  /**
-   * Inline Lexer & Compiler
-   */
-
-  function InlineLexer(links, options) {
-    this.options = options || marked.defaults;
-    this.links = links;
-    this.rules = inline.normal;
-    this.renderer = this.options.renderer || new Renderer();
-    this.renderer.options = this.options;
-
-    if (!this.links) {
-      throw new Error('Tokens array requires a `links` property.');
-    }
-
-    if (this.options.gfm) {
-      if (this.options.breaks) {
-        this.rules = inline.breaks;
-      } else {
-        this.rules = inline.gfm;
-      }
-    } else if (this.options.pedantic) {
-      this.rules = inline.pedantic;
-    }
-  }
-
-  /**
-   * Expose Inline Rules
-   */
-
-  InlineLexer.rules = inline;
-
-  /**
-   * Static Lexing/Compiling Method
-   */
-
-  InlineLexer.output = function (src, links, options) {
-    var inline = new InlineLexer(links, options);
-    return inline.output(src);
-  };
-
-  /**
-   * Lexing/Compiling
-   */
-
-  InlineLexer.prototype.output = function (src) {
-    var out = '',
-        link,
-        text,
-        href,
-        cap;
-
-    while (src) {
-      // escape
-      if (cap = this.rules.escape.exec(src)) {
-        src = src.substring(cap[0].length);
-        out += cap[1];
-        continue;
-      }
-
-      // autolink
-      if (cap = this.rules.autolink.exec(src)) {
-        src = src.substring(cap[0].length);
-        if (cap[2] === '@') {
-          text = cap[1].charAt(6) === ':' ? this.mangle(cap[1].substring(7)) : this.mangle(cap[1]);
-          href = this.mangle('mailto:') + text;
-        } else {
-          text = escape(cap[1]);
-          href = text;
-        }
-        out += this.renderer.link(href, null, text);
-        continue;
-      }
-
-      // url (gfm)
-      if (!this.inLink && (cap = this.rules.url.exec(src))) {
-        src = src.substring(cap[0].length);
-        text = escape(cap[1]);
-        href = text;
-        out += this.renderer.link(href, null, text);
-        continue;
-      }
-
-      // tag
-      if (cap = this.rules.tag.exec(src)) {
-        if (!this.inLink && /^<a /i.test(cap[0])) {
-          this.inLink = true;
-        } else if (this.inLink && /^<\/a>/i.test(cap[0])) {
-          this.inLink = false;
-        }
-        src = src.substring(cap[0].length);
-        out += this.options.sanitize ? this.options.sanitizer ? this.options.sanitizer(cap[0]) : escape(cap[0]) : cap[0];
-        continue;
-      }
-
-      // link
-      if (cap = this.rules.link.exec(src)) {
-        src = src.substring(cap[0].length);
-        this.inLink = true;
-        out += this.outputLink(cap, {
-          href: cap[2],
-          title: cap[3]
-        });
-        this.inLink = false;
-        continue;
-      }
-
-      // reflink, nolink
-      if ((cap = this.rules.reflink.exec(src)) || (cap = this.rules.nolink.exec(src))) {
-        src = src.substring(cap[0].length);
-        link = (cap[2] || cap[1]).replace(/\s+/g, ' ');
-        link = this.links[link.toLowerCase()];
-        if (!link || !link.href) {
-          out += cap[0].charAt(0);
-          src = cap[0].substring(1) + src;
-          continue;
-        }
-        this.inLink = true;
-        out += this.outputLink(cap, link);
-        this.inLink = false;
-        continue;
-      }
-
-      // strong
-      if (cap = this.rules.strong.exec(src)) {
-        src = src.substring(cap[0].length);
-        out += this.renderer.strong(this.output(cap[2] || cap[1]));
-        continue;
-      }
-
-      // em
-      if (cap = this.rules.em.exec(src)) {
-        src = src.substring(cap[0].length);
-        out += this.renderer.em(this.output(cap[2] || cap[1]));
-        continue;
-      }
-
-      // code
-      if (cap = this.rules.code.exec(src)) {
-        src = src.substring(cap[0].length);
-        out += this.renderer.codespan(escape(cap[2], true));
-        continue;
-      }
-
-      // br
-      if (cap = this.rules.br.exec(src)) {
-        src = src.substring(cap[0].length);
-        out += this.renderer.br();
-        continue;
-      }
-
-      // del (gfm)
-      if (cap = this.rules.del.exec(src)) {
-        src = src.substring(cap[0].length);
-        out += this.renderer.del(this.output(cap[1]));
-        continue;
-      }
-
-      // text
-      if (cap = this.rules.text.exec(src)) {
-        src = src.substring(cap[0].length);
-        out += this.renderer.text(escape(this.smartypants(cap[0])));
-        continue;
-      }
-
-      if (src) {
-        throw new Error('Infinite loop on byte: ' + src.charCodeAt(0));
-      }
-    }
-
-    return out;
-  };
-
-  /**
-   * Compile Link
-   */
-
-  InlineLexer.prototype.outputLink = function (cap, link) {
-    var href = escape(link.href),
-        title = link.title ? escape(link.title) : null;
-
-    return cap[0].charAt(0) !== '!' ? this.renderer.link(href, title, this.output(cap[1])) : this.renderer.image(href, title, escape(cap[1]));
-  };
-
-  /**
-   * Smartypants Transformations
-   */
-
-  InlineLexer.prototype.smartypants = function (text) {
-    if (!this.options.smartypants) return text;
-    return text
-    // em-dashes
-    .replace(/---/g, '\u2014')
-    // en-dashes
-    .replace(/--/g, '\u2013')
-    // opening singles
-    .replace(/(^|[-\u2014/(\[{"\s])'/g, '$1\u2018')
-    // closing singles & apostrophes
-    .replace(/'/g, '\u2019')
-    // opening doubles
-    .replace(/(^|[-\u2014/(\[{\u2018\s])"/g, '$1\u201C')
-    // closing doubles
-    .replace(/"/g, '\u201D')
-    // ellipses
-    .replace(/\.{3}/g, '\u2026');
-  };
-
-  /**
-   * Mangle Links
-   */
-
-  InlineLexer.prototype.mangle = function (text) {
-    if (!this.options.mangle) return text;
-    var out = '',
-        l = text.length,
-        i = 0,
-        ch;
-
-    for (; i < l; i++) {
-      ch = text.charCodeAt(i);
-      if (Math.random() > 0.5) {
-        ch = 'x' + ch.toString(16);
-      }
-      out += '&#' + ch + ';';
-    }
-
-    return out;
-  };
-
-  /**
-   * Renderer
-   */
-
-  function Renderer(options) {
-    this.options = options || {};
-  }
-
-  Renderer.prototype.code = function (code, lang, escaped) {
-    if (this.options.highlight) {
-      var out = this.options.highlight(code, lang);
-      if (out != null && out !== code) {
-        escaped = true;
-        code = out;
-      }
-    }
-
-    if (!lang) {
-      return '<pre><code>' + (escaped ? code : escape(code, true)) + '\n</code></pre>';
-    }
-
-    return '<pre><code class="' + this.options.langPrefix + escape(lang, true) + '">' + (escaped ? code : escape(code, true)) + '\n</code></pre>\n';
-  };
-
-  Renderer.prototype.blockquote = function (quote) {
-    return '<blockquote>\n' + quote + '</blockquote>\n';
-  };
-
-  Renderer.prototype.html = function (html) {
-    return html;
-  };
-
-  Renderer.prototype.heading = function (text, level, raw) {
-    return '<h' + level + ' id="' + this.options.headerPrefix + raw.toLowerCase().replace(/[^\w]+/g, '-') + '">' + text + '</h' + level + '>\n';
-  };
-
-  Renderer.prototype.hr = function () {
-    return this.options.xhtml ? '<hr/>\n' : '<hr>\n';
-  };
-
-  Renderer.prototype.list = function (body, ordered) {
-    var type = ordered ? 'ol' : 'ul';
-    return '<' + type + '>\n' + body + '</' + type + '>\n';
-  };
-
-  Renderer.prototype.listitem = function (text) {
-    return '<li>' + text + '</li>\n';
-  };
-
-  Renderer.prototype.paragraph = function (text) {
-    return '<p>' + text + '</p>\n';
-  };
-
-  Renderer.prototype.table = function (header, body) {
-    return '<table>\n' + '<thead>\n' + header + '</thead>\n' + '<tbody>\n' + body + '</tbody>\n' + '</table>\n';
-  };
-
-  Renderer.prototype.tablerow = function (content) {
-    return '<tr>\n' + content + '</tr>\n';
-  };
-
-  Renderer.prototype.tablecell = function (content, flags) {
-    var type = flags.header ? 'th' : 'td';
-    var tag = flags.align ? '<' + type + ' style="text-align:' + flags.align + '">' : '<' + type + '>';
-    return tag + content + '</' + type + '>\n';
-  };
-
-  // span level renderer
-  Renderer.prototype.strong = function (text) {
-    return '<strong>' + text + '</strong>';
-  };
-
-  Renderer.prototype.em = function (text) {
-    return '<em>' + text + '</em>';
-  };
-
-  Renderer.prototype.codespan = function (text) {
-    return '<code>' + text + '</code>';
-  };
-
-  Renderer.prototype.br = function () {
-    return this.options.xhtml ? '<br/>' : '<br>';
-  };
-
-  Renderer.prototype.del = function (text) {
-    return '<del>' + text + '</del>';
-  };
-
-  Renderer.prototype.link = function (href, title, text) {
-    if (this.options.sanitize) {
-      try {
-        var prot = decodeURIComponent(unescape(href)).replace(/[^\w:]/g, '').toLowerCase();
-      } catch (e) {
-        return '';
-      }
-      if (prot.indexOf('javascript:') === 0 || prot.indexOf('vbscript:') === 0 || prot.indexOf('data:') === 0) {
-        return '';
-      }
-    }
-    var out = '<a href="' + href + '"';
-    if (title) {
-      out += ' title="' + title + '"';
-    }
-    out += '>' + text + '</a>';
-    return out;
-  };
-
-  Renderer.prototype.image = function (href, title, text) {
-    var out = '<img src="' + href + '" alt="' + text + '"';
-    if (title) {
-      out += ' title="' + title + '"';
-    }
-    out += this.options.xhtml ? '/>' : '>';
-    return out;
-  };
-
-  Renderer.prototype.text = function (text) {
-    return text;
-  };
-
-  /**
-   * Parsing & Compiling
-   */
-
-  function Parser(options) {
-    this.tokens = [];
-    this.token = null;
-    this.options = options || marked.defaults;
-    this.options.renderer = this.options.renderer || new Renderer();
-    this.renderer = this.options.renderer;
-    this.renderer.options = this.options;
-  }
-
-  /**
-   * Static Parse Method
-   */
-
-  Parser.parse = function (src, options, renderer) {
-    var parser = new Parser(options, renderer);
-    return parser.parse(src);
-  };
-
-  /**
-   * Parse Loop
-   */
-
-  Parser.prototype.parse = function (src) {
-    this.inline = new InlineLexer(src.links, this.options, this.renderer);
-    this.tokens = src.reverse();
-
-    var out = '';
-    while (this.next()) {
-      out += this.tok();
-    }
-
-    return out;
-  };
-
-  /**
-   * Next Token
-   */
-
-  Parser.prototype.next = function () {
-    return this.token = this.tokens.pop();
-  };
-
-  /**
-   * Preview Next Token
-   */
-
-  Parser.prototype.peek = function () {
-    return this.tokens[this.tokens.length - 1] || 0;
-  };
-
-  /**
-   * Parse Text Tokens
-   */
-
-  Parser.prototype.parseText = function () {
-    var body = this.token.text;
-
-    while (this.peek().type === 'text') {
-      body += '\n' + this.next().text;
-    }
-
-    return this.inline.output(body);
-  };
-
-  /**
-   * Parse Current Token
-   */
-
-  Parser.prototype.tok = function () {
-    switch (this.token.type) {
-      case 'space':
-        {
-          return '';
-        }
-      case 'hr':
-        {
-          return this.renderer.hr();
-        }
-      case 'heading':
-        {
-          return this.renderer.heading(this.inline.output(this.token.text), this.token.depth, this.token.text);
-        }
-      case 'code':
-        {
-          return this.renderer.code(this.token.text, this.token.lang, this.token.escaped);
-        }
-      case 'table':
-        {
-          var header = '',
-              body = '',
-              i,
-              row,
-              cell,
-              flags,
-              j;
-
-          // header
-          cell = '';
-          for (i = 0; i < this.token.header.length; i++) {
-            flags = { header: true, align: this.token.align[i] };
-            cell += this.renderer.tablecell(this.inline.output(this.token.header[i]), { header: true, align: this.token.align[i] });
-          }
-          header += this.renderer.tablerow(cell);
-
-          for (i = 0; i < this.token.cells.length; i++) {
-            row = this.token.cells[i];
-
-            cell = '';
-            for (j = 0; j < row.length; j++) {
-              cell += this.renderer.tablecell(this.inline.output(row[j]), { header: false, align: this.token.align[j] });
-            }
-
-            body += this.renderer.tablerow(cell);
-          }
-          return this.renderer.table(header, body);
-        }
-      case 'blockquote_start':
-        {
-          var body = '';
-
-          while (this.next().type !== 'blockquote_end') {
-            body += this.tok();
-          }
-
-          return this.renderer.blockquote(body);
-        }
-      case 'list_start':
-        {
-          var body = '',
-              ordered = this.token.ordered;
-
-          while (this.next().type !== 'list_end') {
-            body += this.tok();
-          }
-
-          return this.renderer.list(body, ordered);
-        }
-      case 'list_item_start':
-        {
-          var body = '';
-
-          while (this.next().type !== 'list_item_end') {
-            body += this.token.type === 'text' ? this.parseText() : this.tok();
-          }
-
-          return this.renderer.listitem(body);
-        }
-      case 'loose_item_start':
-        {
-          var body = '';
-
-          while (this.next().type !== 'list_item_end') {
-            body += this.tok();
-          }
-
-          return this.renderer.listitem(body);
-        }
-      case 'html':
-        {
-          var html = !this.token.pre && !this.options.pedantic ? this.inline.output(this.token.text) : this.token.text;
-          return this.renderer.html(html);
-        }
-      case 'paragraph':
-        {
-          return this.renderer.paragraph(this.inline.output(this.token.text));
-        }
-      case 'text':
-        {
-          return this.renderer.paragraph(this.parseText());
-        }
-    }
-  };
-
-  /**
-   * Helpers
-   */
-
-  function escape(html, encode) {
-    return html.replace(!encode ? /&(?!#?\w+;)/g : /&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-  }
-
-  function unescape(html) {
-    // explicitly match decimal, hex, and named HTML entities 
-    return html.replace(/&(#(?:\d+)|(?:#x[0-9A-Fa-f]+)|(?:\w+));?/g, function (_, n) {
-      n = n.toLowerCase();
-      if (n === 'colon') return ':';
-      if (n.charAt(0) === '#') {
-        return n.charAt(1) === 'x' ? String.fromCharCode(parseInt(n.substring(2), 16)) : String.fromCharCode(+n.substring(1));
-      }
-      return '';
-    });
-  }
-
-  function replace(regex, opt) {
-    regex = regex.source;
-    opt = opt || '';
-    return function self(name, val) {
-      if (!name) return new RegExp(regex, opt);
-      val = val.source || val;
-      val = val.replace(/(^|[^\[])\^/g, '$1');
-      regex = regex.replace(name, val);
-      return self;
-    };
-  }
-
-  function noop() {}
-  noop.exec = noop;
-
-  function merge(obj) {
-    var i = 1,
-        target,
-        key;
-
-    for (; i < arguments.length; i++) {
-      target = arguments[i];
-      for (key in target) {
-        if (Object.prototype.hasOwnProperty.call(target, key)) {
-          obj[key] = target[key];
-        }
-      }
-    }
-
-    return obj;
-  }
-
-  /**
-   * Marked
-   */
-
-  function marked(src, opt, callback) {
-    if (callback || typeof opt === 'function') {
-      if (!callback) {
-        callback = opt;
-        opt = null;
-      }
-
-      opt = merge({}, marked.defaults, opt || {});
-
-      var highlight = opt.highlight,
-          tokens,
-          pending,
-          i = 0;
-
-      try {
-        tokens = Lexer.lex(src, opt);
-      } catch (e) {
-        return callback(e);
-      }
-
-      pending = tokens.length;
-
-      var done = function done(err) {
-        if (err) {
-          opt.highlight = highlight;
-          return callback(err);
-        }
-
-        var out;
-
-        try {
-          out = Parser.parse(tokens, opt);
-        } catch (e) {
-          err = e;
-        }
-
-        opt.highlight = highlight;
-
-        return err ? callback(err) : callback(null, out);
-      };
-
-      if (!highlight || highlight.length < 3) {
-        return done();
-      }
-
-      delete opt.highlight;
-
-      if (!pending) return done();
-
-      for (; i < tokens.length; i++) {
-        (function (token) {
-          if (token.type !== 'code') {
-            return --pending || done();
-          }
-          return highlight(token.text, token.lang, function (err, code) {
-            if (err) return done(err);
-            if (code == null || code === token.text) {
-              return --pending || done();
-            }
-            token.text = code;
-            token.escaped = true;
-            --pending || done();
-          });
-        })(tokens[i]);
-      }
-
-      return;
-    }
-    try {
-      if (opt) opt = merge({}, marked.defaults, opt);
-      return Parser.parse(Lexer.lex(src, opt), opt);
-    } catch (e) {
-      e.message += '\nPlease report this to https://github.com/chjj/marked.';
-      if ((opt || marked.defaults).silent) {
-        return '<p>An error occured:</p><pre>' + escape(e.message + '', true) + '</pre>';
-      }
-      throw e;
-    }
-  }
-
-  /**
-   * Options
-   */
-
-  marked.options = marked.setOptions = function (opt) {
-    merge(marked.defaults, opt);
-    return marked;
-  };
-
-  marked.defaults = {
-    gfm: true,
-    tables: true,
-    breaks: false,
-    pedantic: false,
-    sanitize: false,
-    sanitizer: null,
-    mangle: true,
-    smartLists: false,
-    silent: false,
-    highlight: null,
-    langPrefix: 'lang-',
-    smartypants: false,
-    headerPrefix: '',
-    renderer: new Renderer(),
-    xhtml: false
-  };
-
-  /**
-   * Expose
-   */
-
-  marked.Parser = Parser;
-  marked.parser = Parser.parse;
-
-  marked.Renderer = Renderer;
-
-  marked.Lexer = Lexer;
-  marked.lexer = Lexer.lex;
-
-  marked.InlineLexer = InlineLexer;
-  marked.inlineLexer = InlineLexer.output;
-
-  marked.parse = marked;
-
-  if (typeof module !== 'undefined' && ( false ? 'undefined' : _typeof(exports)) === 'object') {
-    module.exports = marked;
-  } else if (true) {
-    !(__WEBPACK_AMD_DEFINE_RESULT__ = function () {
-      return marked;
-    }.call(exports, __webpack_require__, exports, module),
-				__WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
-  } else {
-    this.marked = marked;
-  }
-}).call(function () {
-  return this || (typeof window !== 'undefined' ? window : global);
-}());
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(1)))
-
-/***/ }),
-/* 3 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4041,10 +2819,10 @@ function primitiveSymbol() {
 function toPrimitive(value) {
     return value === null ? null : (typeof value === "undefined" ? "undefined" : _typeof(value)) === "object" ? "" + value : value;
 }
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(1)))
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(4)))
 
 /***/ }),
-/* 4 */
+/* 2 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4056,7 +2834,7 @@ Object.defineProperty(exports, "__esModule", {
 
 var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
 
-var _icons = __webpack_require__(7);
+var _icons = __webpack_require__(6);
 
 var _constants = __webpack_require__(0);
 
@@ -4098,7 +2876,10 @@ function renderHeader(_ref, instance) {
 }
 
 function renderComments(_ref2, instance) {
-  var comments = _ref2.comments,
+  var meta = _ref2.meta,
+      comments = _ref2.comments,
+      commentReactions = _ref2.commentReactions,
+      currentPage = _ref2.currentPage,
       user = _ref2.user,
       error = _ref2.error;
 
@@ -4109,7 +2890,7 @@ function renderComments(_ref2, instance) {
     var errorBlock = document.createElement('div');
     errorBlock.className = 'gitment-comments-error';
 
-    if (error === _constants.NOT_INITIALIZED_ERROR && user.login === instance.owner) {
+    if (error === _constants.NOT_INITIALIZED_ERROR && (user.permission === 'admin' || user.permission === 'write')) {
       var initHint = document.createElement('div');
       var initButton = document.createElement('button');
       initButton.className = 'gitment-comments-init-btn';
@@ -4150,11 +2931,71 @@ function renderComments(_ref2, instance) {
     var updateDate = new Date(comment.updated_at);
     var commentItem = document.createElement('li');
     commentItem.className = 'gitment-comment';
-    commentItem.innerHTML = '\n      <a class="gitment-comment-avatar" href="' + comment.user.html_url + '" target="_blank">\n        <img class="gitment-comment-avatar-img" src="' + comment.user.avatar_url + '"/>\n      </a>\n      <div class="gitment-comment-main">\n        <div class="gitment-comment-header">\n          <a class="gitment-comment-name" href="' + comment.user.html_url + '" target="_blank">\n            ' + comment.user.login + '\n          </a>\n          commented on\n          <span title="' + createDate + '">' + createDate.toDateString() + '</span>\n          ' + (createDate.toString() !== updateDate.toString() ? ' \u2022 <span title="comment was edited at ' + updateDate + '">edited</span>' : '') + '\n        </div>\n        <div class="gitment-comment-body gitment-markdown">' + instance.marked(comment.body) + '</div>\n      </div>\n    ';
+    commentItem.innerHTML = '\n      <a class="gitment-comment-avatar" href="' + comment.user.html_url + '" target="_blank">\n        <img class="gitment-comment-avatar-img" src="' + comment.user.avatar_url + '"/>\n      </a>\n      <div class="gitment-comment-main">\n        <div class="gitment-comment-header">\n          <a class="gitment-comment-name" href="' + comment.user.html_url + '" target="_blank">\n            ' + comment.user.login + '\n          </a>\n          commented on\n          <span title="' + createDate + '">' + createDate.toDateString() + '</span>\n          ' + (createDate.toString() !== updateDate.toString() ? ' \u2022 <span title="comment was edited at ' + updateDate + '">edited</span>' : '') + '\n          <div class="gitment-comment-like-btn">' + _icons.heart + ' ' + (comment.reactions.heart || '') + '</div>\n        </div>\n        <div class="gitment-comment-body gitment-markdown">' + comment.body_html + '</div>\n      </div>\n    ';
+    var likeButton = commentItem.querySelector('.gitment-comment-like-btn');
+    var likedReaction = commentReactions[comment.id] && commentReactions[comment.id].find(function (reaction) {
+      return reaction.user.login === user.login;
+    });
+    if (likedReaction) {
+      likeButton.classList.add('liked');
+      likeButton.onclick = function () {
+        return instance.unlikeAComment(comment.id);
+      };
+    } else {
+      likeButton.classList.remove('liked');
+      likeButton.onclick = function () {
+        return instance.likeAComment(comment.id);
+      };
+    }
     commentsList.appendChild(commentItem);
   });
 
   container.appendChild(commentsList);
+
+  if (meta) {
+    var pageCount = Math.ceil(meta.comments / instance.perPage);
+    if (pageCount > 1) {
+      var pagination = document.createElement('ul');
+      pagination.className = 'gitment-comments-pagination';
+
+      if (currentPage > 1) {
+        var previousButton = document.createElement('li');
+        previousButton.className = 'gitment-comments-page-item';
+        previousButton.innerText = 'Previous';
+        previousButton.onclick = function () {
+          return instance.goto(currentPage - 1);
+        };
+        pagination.appendChild(previousButton);
+      }
+
+      var _loop = function _loop(i) {
+        var pageItem = document.createElement('li');
+        pageItem.className = 'gitment-comments-page-item';
+        pageItem.innerText = i;
+        pageItem.onclick = function () {
+          return instance.goto(i);
+        };
+        if (currentPage === i) pageItem.classList.add('gitment-selected');
+        pagination.appendChild(pageItem);
+      };
+
+      for (var i = 1; i <= pageCount; i++) {
+        _loop(i);
+      }
+
+      if (currentPage < pageCount) {
+        var nextButton = document.createElement('li');
+        nextButton.className = 'gitment-comments-page-item';
+        nextButton.innerText = 'Next';
+        nextButton.onclick = function () {
+          return instance.goto(currentPage + 1);
+        };
+        pagination.appendChild(nextButton);
+      }
+
+      container.appendChild(pagination);
+    }
+  }
 
   return container;
 }
@@ -4167,7 +3008,7 @@ function renderEditor(_ref3, instance) {
 
   var shouldDisable = user.login ? '' : 'disabled';
   var disabledTip = user.login ? '' : 'Login to Comment';
-  container.innerHTML = '\n      ' + (user.login ? '<a class="gitment-editor-avatar" href="' + user.html_url + '" target="_blank">\n            <img class="gitment-editor-avatar-img" src="' + user.avatar_url + '"/>\n          </a>' : user.loginning ? '<div class="gitment-editor-avatar">' + _icons.spinner + '</div>' : '<a class="gitment-editor-avatar" href="' + instance.loginLink + '" title="login with GitHub">\n              ' + _icons.github + '\n            </a>') + '\n    </a>\n    <div class="gitment-editor-main">\n      <div class="gitment-editor-header">\n        <nav class="gitment-editor-tabs">\n          <button class="gitment-editor-tab selected">Write</button>\n          <button class="gitment-editor-tab">Preview</button>\n        </nav>\n        <div class="gitment-editor-login">\n          ' + (user.login ? '<a class="gitment-editor-logout-link">Logout</a>' : user.loginning ? 'Loginning...' : '<a class="gitment-editor-login-link" href="' + instance.loginLink + '">Login</a> with GitHub') + '\n        </div>\n      </div>\n      <div class="gitment-editor-body">\n        <div class="gitment-editor-write-field">\n          <textarea placeholder="Leave a comment" title="' + disabledTip + '" ' + shouldDisable + '></textarea>\n        </div>\n        <div class="gitment-editor-preview-field hidden">\n          <div class="gitment-editor-preview gitment-markdown"></div>\n        </div>\n      </div>\n      <div class="gitment-editor-footer">\n        <a class="gitment-editor-footer-tip" href="https://guides.github.com/features/mastering-markdown/" target="_blank">\n          Styling with Markdown is supported\n        </a>\n        <button class="gitment-editor-submit" title="' + disabledTip + '" ' + shouldDisable + '>Comment</button>\n      </div>\n    </div>\n  ';
+  container.innerHTML = '\n      ' + (user.login ? '<a class="gitment-editor-avatar" href="' + user.html_url + '" target="_blank">\n            <img class="gitment-editor-avatar-img" src="' + user.avatar_url + '"/>\n          </a>' : user.loginning ? '<div class="gitment-editor-avatar">' + _icons.spinner + '</div>' : '<a class="gitment-editor-avatar" href="' + instance.loginLink + '" title="login with GitHub">\n              ' + _icons.github + '\n            </a>') + '\n    </a>\n    <div class="gitment-editor-main">\n      <div class="gitment-editor-header">\n        <nav class="gitment-editor-tabs">\n          <button class="gitment-editor-tab gitment-selected">Write</button>\n          <button class="gitment-editor-tab">Preview</button>\n        </nav>\n        <div class="gitment-editor-login">\n          ' + (user.login ? '<a class="gitment-editor-logout-link">Logout</a>' : user.loginning ? 'Loginning...' : '<a class="gitment-editor-login-link" href="' + instance.loginLink + '">Login</a> with GitHub') + '\n        </div>\n      </div>\n      <div class="gitment-editor-body">\n        <div class="gitment-editor-write-field">\n          <textarea placeholder="Leave a comment" title="' + disabledTip + '" ' + shouldDisable + '></textarea>\n        </div>\n        <div class="gitment-editor-preview-field gitment-hidden">\n          <div class="gitment-editor-preview gitment-markdown"></div>\n        </div>\n      </div>\n      <div class="gitment-editor-footer">\n        <a class="gitment-editor-footer-tip" href="https://guides.github.com/features/mastering-markdown/" target="_blank">\n          Styling with Markdown is supported\n        </a>\n        <button class="gitment-editor-submit" title="' + disabledTip + '" ' + shouldDisable + '>Comment</button>\n      </div>\n    </div>\n  ';
   if (user.login) {
     container.querySelector('.gitment-editor-logout-link').onclick = function () {
       return instance.logout();
@@ -4195,21 +3036,30 @@ function renderEditor(_ref3, instance) {
       previewTab = _container$querySelec2[1];
 
   writeTab.onclick = function () {
-    writeTab.classList.add('selected');
-    previewTab.classList.remove('selected');
-    writeField.classList.remove('hidden');
-    previewField.classList.add('hidden');
+    writeTab.classList.add('gitment-selected');
+    previewTab.classList.remove('gitment-selected');
+    writeField.classList.remove('gitment-hidden');
+    previewField.classList.add('gitment-hidden');
 
     textarea.focus();
   };
   previewTab.onclick = function () {
-    previewTab.classList.add('selected');
-    writeTab.classList.remove('selected');
-    previewField.classList.remove('hidden');
-    writeField.classList.add('hidden');
+    previewTab.classList.add('gitment-selected');
+    writeTab.classList.remove('gitment-selected');
+    previewField.classList.remove('gitment-hidden');
+    writeField.classList.add('gitment-hidden');
 
-    var content = textarea.value.trim() || 'Nothing to preview';
-    previewField.querySelector('.gitment-editor-preview').innerHTML = instance.marked(content);
+    var preview = previewField.querySelector('.gitment-editor-preview');
+    var content = textarea.value.trim();
+    if (!content) {
+      preview.innerText = 'Nothing to preview';
+      return;
+    }
+
+    preview.innerText = 'Loading preview...';
+    instance.markdown(content).then(function (html) {
+      return preview.innerHTML = html;
+    });
   };
 
   var submitButton = container.querySelector('.gitment-editor-submit');
@@ -4251,7 +3101,7 @@ function render(state, instance) {
 exports.default = { render: render, renderHeader: renderHeader, renderComments: renderComments, renderEditor: renderEditor, renderFooter: renderFooter };
 
 /***/ }),
-/* 5 */
+/* 3 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4329,7 +3179,13 @@ function ajaxFactory(method) {
 
     var p = new Promise(function (resolve, reject) {
       req.addEventListener('load', function () {
-        var data = req.responseText ? JSON.parse(req.responseText) : {};
+        var contentType = req.getResponseHeader('content-type');
+        var res = req.responseText;
+        if (!/json/.test(contentType)) {
+          resolve(res);
+          return;
+        }
+        var data = req.responseText ? JSON.parse(res) : {};
         if (data.message) {
           reject(new Error(data.message));
         } else {
@@ -4342,7 +3198,7 @@ function ajaxFactory(method) {
     });
     req.open(method, url, true);
 
-    req.setRequestHeader('Accept', 'application/vnd.github.squirrel-girl-preview');
+    req.setRequestHeader('Accept', 'application/vnd.github.squirrel-girl-preview, application/vnd.github.html+json');
     if (token) {
       req.setRequestHeader('Authorization', 'token ' + token);
     }
@@ -4364,7 +3220,37 @@ var http = exports.http = {
 };
 
 /***/ }),
-/* 6 */
+/* 4 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
+
+var g;
+
+// This works in non-strict mode
+g = function () {
+	return this;
+}();
+
+try {
+	// This works if eval is allowed (see CSP)
+	g = g || Function("return this")() || (1, eval)("this");
+} catch (e) {
+	// This works if the window reference is available
+	if ((typeof window === "undefined" ? "undefined" : _typeof(window)) === "object") g = window;
+}
+
+// g can still be undefined, but nothing to do about it...
+// We return undefined, instead of nothing here, so it's
+// easier to handle this case. if(!global) { ...}
+
+module.exports = g;
+
+/***/ }),
+/* 5 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4372,17 +3258,13 @@ var http = exports.http = {
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-var _marked = __webpack_require__(2);
-
-var _marked2 = _interopRequireDefault(_marked);
-
-var _mobx = __webpack_require__(3);
+var _mobx = __webpack_require__(1);
 
 var _constants = __webpack_require__(0);
 
-var _utils = __webpack_require__(5);
+var _utils = __webpack_require__(3);
 
-var _default = __webpack_require__(4);
+var _default = __webpack_require__(2);
 
 var _default2 = _interopRequireDefault(_default);
 
@@ -4391,12 +3273,6 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 var scope = 'repo';
-
-_marked2.default.setOptions({
-  breaks: true,
-  gfm: true,
-  sanitize: true
-});
 
 function extendRenderer(instance, renderer) {
   instance[renderer] = function (container) {
@@ -4447,17 +3323,21 @@ var Gitment = function () {
 
     _classCallCheck(this, Gitment);
 
+    this.defaultTheme = _default2.default;
+    this.useTheme(_default2.default);
+
     Object.assign(this, {
-      marked: _marked2.default,
-      defaultTheme: _default2.default,
       id: window.location.href,
       title: window.document.title,
       link: window.location.href,
       desc: '',
       labels: [],
       theme: _default2.default,
-      oauth: {}
+      oauth: {},
+      perPage: 30
     }, options);
+
+    this.useTheme(this.theme);
 
     var user = {};
     try {
@@ -4476,12 +3356,9 @@ var Gitment = function () {
       error: null,
       meta: {},
       comments: undefined,
-      reactions: []
-    });
-
-    var renderers = Object.keys(this.theme);
-    renderers.forEach(function (renderer) {
-      return extendRenderer(_this, renderer);
+      reactions: [],
+      commentReactions: {},
+      currentPage: 1
     });
 
     var query = _utils.Query.parse();
@@ -4531,20 +3408,44 @@ var Gitment = function () {
       });
     }
   }, {
-    key: 'update',
-    value: function update() {
+    key: 'useTheme',
+    value: function useTheme() {
       var _this3 = this;
 
+      var theme = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+
+      this.theme = theme;
+
+      var renderers = Object.keys(this.theme);
+      renderers.forEach(function (renderer) {
+        return extendRenderer(_this3, renderer);
+      });
+    }
+  }, {
+    key: 'update',
+    value: function update() {
+      var _this4 = this;
+
       return Promise.all([this.loadMeta(), this.loadUserInfo()]).then(function () {
-        return Promise.all([_this3.loadComments(), _this3.loadReactions()]);
+        return Promise.all([_this4.loadComments().then(function () {
+          return _this4.loadCommentReactions();
+        }), _this4.loadReactions()]);
       }).catch(function (e) {
-        return _this3.state.error = e;
+        return _this4.state.error = e;
+      });
+    }
+  }, {
+    key: 'markdown',
+    value: function markdown(text) {
+      return _utils.http.post('/markdown', {
+        text: text,
+        mode: 'gfm'
       });
     }
   }, {
     key: 'createIssue',
     value: function createIssue() {
-      var _this4 = this;
+      var _this5 = this;
 
       var id = this.id,
           owner = this.owner,
@@ -4557,10 +3458,10 @@ var Gitment = function () {
 
       return _utils.http.post('/repos/' + owner + '/' + repo + '/issues', {
         title: title,
-        labels: labels.concat([id]),
+        labels: labels.concat(['gitment', id]),
         body: link + '\n\n' + desc
       }).then(function (meta) {
-        _this4.state.meta = meta;
+        _this5.state.meta = meta;
         return meta;
       });
     }
@@ -4581,7 +3482,7 @@ var Gitment = function () {
   }, {
     key: 'loadMeta',
     value: function loadMeta() {
-      var _this5 = this;
+      var _this6 = this;
 
       var id = this.id,
           owner = this.owner,
@@ -4592,34 +3493,44 @@ var Gitment = function () {
         labels: id
       }).then(function (issues) {
         if (!issues.length) return Promise.reject(_constants.NOT_INITIALIZED_ERROR);
-        _this5.state.meta = issues[0];
+        _this6.state.meta = issues[0];
         return issues[0];
       });
     }
   }, {
     key: 'loadComments',
     value: function loadComments() {
-      var _this6 = this;
+      var _this7 = this;
+
+      var page = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : this.state.currentPage;
 
       return this.getIssue().then(function (issue) {
-        return _utils.http.get(issue.comments_url, {}, '');
+        return _utils.http.get(issue.comments_url, { page: page, per_page: _this7.perPage }, '');
       }).then(function (comments) {
-        _this6.state.comments = comments;
+        _this7.state.comments = comments;
         return comments;
       });
     }
   }, {
     key: 'loadUserInfo',
     value: function loadUserInfo() {
-      var _this7 = this;
+      var _this8 = this;
 
       if (!this.accessToken) {
         this.logout();
         return Promise.resolve({});
       }
 
+      var owner = this.owner,
+          repo = this.repo;
+
+
       return _utils.http.get('/user').then(function (user) {
-        _this7.state.user = user;
+        return _utils.http.get('/repos/' + owner + '/' + repo + '/collaborators/' + user.login + '/permission').then(function (permission) {
+          return Object.assign(user, { permission: permission.permission });
+        });
+      }).then(function (user) {
+        _this8.state.user = user;
         localStorage.setItem(_constants.LS_USER_KEY, JSON.stringify(user));
         return user;
       });
@@ -4627,15 +3538,48 @@ var Gitment = function () {
   }, {
     key: 'loadReactions',
     value: function loadReactions() {
-      var _this8 = this;
+      var _this9 = this;
 
-      if (!this.accessToken) return Promise.resolve([]);
+      if (!this.accessToken) {
+        this.state.reactions = [];
+        return Promise.resolve([]);
+      }
 
       return this.getIssue().then(function (issue) {
-        return _utils.http.get(issue.reactions.url, {}, '');
+        if (!issue.reactions.heart) return [];
+        return _utils.http.get(issue.reactions.url, { content: 'heart' }, '');
       }).then(function (reactions) {
-        _this8.state.reactions = reactions;
+        _this9.state.reactions = reactions;
         return reactions;
+      });
+    }
+  }, {
+    key: 'loadCommentReactions',
+    value: function loadCommentReactions() {
+      var _this10 = this;
+
+      if (!this.accessToken) {
+        this.state.commentReactions = {};
+        return Promise.resolve([]);
+      }
+
+      var comments = this.state.comments;
+      var comentReactions = {};
+
+      return Promise.all(comments.map(function (comment) {
+        if (!comment.reactions.heart) return [];
+
+        var owner = _this10.owner,
+            repo = _this10.repo;
+
+        return _utils.http.get('/repos/' + owner + '/' + repo + '/issues/comments/' + comment.id + '/reactions', { content: 'heart' });
+      })).then(function (reactionsArray) {
+        comments.forEach(function (comment, index) {
+          comentReactions[comment.id] = reactionsArray[index];
+        });
+        _this10.state.commentReactions = comentReactions;
+
+        return comentReactions;
       });
     }
   }, {
@@ -4651,9 +3595,16 @@ var Gitment = function () {
       this.state.user = {};
     }
   }, {
+    key: 'goto',
+    value: function goto(page) {
+      this.state.currentPage = page;
+      this.state.comments = undefined;
+      return this.loadComments(page);
+    }
+  }, {
     key: 'like',
     value: function like() {
-      var _this9 = this;
+      var _this11 = this;
 
       if (!this.accessToken) {
         alert('Login to Like');
@@ -4667,14 +3618,14 @@ var Gitment = function () {
       return _utils.http.post('/repos/' + owner + '/' + repo + '/issues/' + this.state.meta.number + '/reactions', {
         content: 'heart'
       }).then(function (reaction) {
-        _this9.state.reactions.push(reaction);
-        _this9.state.meta.reactions.heart++;
+        _this11.state.reactions.push(reaction);
+        _this11.state.meta.reactions.heart++;
       });
     }
   }, {
     key: 'unlike',
     value: function unlike() {
-      var _this10 = this;
+      var _this12 = this;
 
       if (!this.accessToken) return Promise.reject();
 
@@ -4687,7 +3638,51 @@ var Gitment = function () {
       });
       return _utils.http.delete('/reactions/' + reactions[index].id).then(function () {
         reactions.splice(index, 1);
-        _this10.state.meta.reactions.heart--;
+        _this12.state.meta.reactions.heart--;
+      });
+    }
+  }, {
+    key: 'likeAComment',
+    value: function likeAComment(commentId) {
+      var _this13 = this;
+
+      if (!this.accessToken) {
+        alert('Login to Like');
+        return Promise.reject();
+      }
+
+      var owner = this.owner,
+          repo = this.repo;
+
+      var comment = this.state.comments.find(function (comment) {
+        return comment.id === commentId;
+      });
+
+      return _utils.http.post('/repos/' + owner + '/' + repo + '/issues/comments/' + commentId + '/reactions', {
+        content: 'heart'
+      }).then(function (reaction) {
+        _this13.state.commentReactions[commentId].push(reaction);
+        comment.reactions.heart++;
+      });
+    }
+  }, {
+    key: 'unlikeAComment',
+    value: function unlikeAComment(commentId) {
+      if (!this.accessToken) return Promise.reject();
+
+      var reactions = this.state.commentReactions[commentId];
+      var comment = this.state.comments.find(function (comment) {
+        return comment.id === commentId;
+      });
+      var user = this.state.user;
+
+      var index = reactions.findIndex(function (reaction) {
+        return reaction.user.login === user.login;
+      });
+
+      return _utils.http.delete('/reactions/' + reactions[index].id).then(function () {
+        reactions.splice(index, 1);
+        comment.reactions.heart--;
       });
     }
   }]);
@@ -4698,7 +3693,7 @@ var Gitment = function () {
 module.exports = Gitment;
 
 /***/ }),
-/* 7 */
+/* 6 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
