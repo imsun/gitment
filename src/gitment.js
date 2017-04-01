@@ -45,8 +45,10 @@ class Gitment {
   }
 
   constructor(options = {}) {
+    this.defaultTheme = defaultTheme
+    this.useTheme(defaultTheme)
+
     Object.assign(this, {
-      defaultTheme,
       id: window.location.href,
       title: window.document.title,
       link: window.location.href,
@@ -56,6 +58,8 @@ class Gitment {
       oauth: {},
       perPage: 30,
     }, options)
+
+    this.useTheme(this.theme)
 
     const user = {}
     try {
@@ -77,9 +81,6 @@ class Gitment {
       reactions: [],
       currentPage: 1,
     })
-
-    const renderers = Object.keys(this.theme)
-    renderers.forEach(renderer => extendRenderer(this, renderer))
 
     const query = Query.parse()
     if (query.code) {
@@ -123,6 +124,13 @@ class Gitment {
       })
   }
 
+  useTheme(theme = {}) {
+    this.theme = theme
+
+    const renderers = Object.keys(this.theme)
+    renderers.forEach(renderer => extendRenderer(this, renderer))
+  }
+
   update() {
     return Promise.all([this.loadMeta(), this.loadUserInfo()])
       .then(() => Promise.all([this.loadComments(), this.loadReactions()]))
@@ -141,7 +149,7 @@ class Gitment {
 
     return http.post(`/repos/${owner}/${repo}/issues`, {
       title,
-      labels: labels.concat([id]),
+      labels: labels.concat(['gitment', id]),
       body: `${link}\n\n${desc}`,
     })
       .then((meta) => {
