@@ -18,7 +18,8 @@ const gitment = new Gitment({
 
 gitment.render('container')
 
+window.gitment = gitment
+
 try {
   window.http = require('./utils').http
-  module.exports = gitment
 } catch (e) {}

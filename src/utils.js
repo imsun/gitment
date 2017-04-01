@@ -49,7 +49,13 @@ function ajaxFactory(method) {
 
     const p = new Promise((resolve, reject) => {
       req.addEventListener('load', () => {
-        const data = req.responseText ? JSON.parse(req.responseText) : {}
+        const contentType = req.getResponseHeader('content-type')
+        const res = req.responseText
+        if (!/json/.test(contentType)) {
+          resolve(res)
+          return
+        }
+        const data = req.responseText ? JSON.parse(res) : {}
         if (data.message) {
           reject(new Error(data.message))
         } else {
@@ -60,7 +66,7 @@ function ajaxFactory(method) {
     })
     req.open(method, url, true)
 
-    req.setRequestHeader('Accept', 'application/vnd.github.squirrel-girl-preview')
+    req.setRequestHeader('Accept', 'application/vnd.github.squirrel-girl-preview, application/vnd.github.html+json')
     if (token) {
       req.setRequestHeader('Authorization', `token ${token}`)
     }

@@ -15,7 +15,6 @@
     "webpack-dev-server": "^2.4.2"
   },
   "dependencies": {
-    "marked": "^0.3.6",
     "mobx": "^3.1.7"
   }
 }

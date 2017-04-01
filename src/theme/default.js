@@ -38,7 +38,7 @@ function renderHeader({ meta, user, reactions }, instance) {
   return container
 }
 
-function renderComments({ comments, user, error }, instance) {
+function renderComments({ meta, comments, commentReactions, currentPage, user, error }, instance) {
   const container = document.createElement('div')
   container.className = 'gitment-container gitment-comments-container'
 
@@ -46,7 +46,8 @@ function renderComments({ comments, user, error }, instance) {
     const errorBlock = document.createElement('div')
     errorBlock.className = 'gitment-comments-error'
 
-    if (error === NOT_INITIALIZED_ERROR && user.login === instance.owner) {
+    if (error === NOT_INITIALIZED_ERROR
+      && (user.permission === 'admin' || user.permission === 'write')) {
       const initHint = document.createElement('div')
       const initButton = document.createElement('button')
       initButton.className = 'gitment-comments-init-btn'
@@ -103,14 +104,60 @@ function renderComments({ comments, user, error }, instance) {
             ? ` • <span title="comment was edited at ${updateDate}">edited</span>`
             : ''
           }
+          <div class="gitment-comment-like-btn">${heartIcon} ${comment.reactions.heart || ''}</div>
         </div>
-        <div class="gitment-comment-body gitment-markdown">${instance.marked(comment.body)}</div>
+        <div class="gitment-comment-body gitment-markdown">${comment.body_html}</div>
       </div>
     `
+    const likeButton = commentItem.querySelector('.gitment-comment-like-btn')
+    const likedReaction = commentReactions[comment.id]
+      && commentReactions[comment.id].find(reaction => reaction.user.login === user.login)
+    if (likedReaction) {
+      likeButton.classList.add('liked')
+      likeButton.onclick = () => instance.unlikeAComment(comment.id)
+    } else {
+      likeButton.classList.remove('liked')
+      likeButton.onclick = () => instance.likeAComment(comment.id)
+    }
     commentsList.appendChild(commentItem)
   })
 
   container.appendChild(commentsList)
+
+  if (meta) {
+    let pageCount = Math.ceil(meta.comments / instance.perPage)
+    if (pageCount > 1) {
+      const pagination = document.createElement('ul')
+      pagination.className = 'gitment-comments-pagination'
+
+      if (currentPage > 1) {
+        const previousButton = document.createElement('li')
+        previousButton.className = 'gitment-comments-page-item'
+        previousButton.innerText = 'Previous'
+        previousButton.onclick = () => instance.goto(currentPage - 1)
+        pagination.appendChild(previousButton)
+      }
+
+      for (let i = 1; i <= pageCount; i++) {
+        const pageItem = document.createElement('li')
+        pageItem.className = 'gitment-comments-page-item'
+        pageItem.innerText = i
+        pageItem.onclick = () => instance.goto(i)
+        if (currentPage === i) pageItem.classList.add('gitment-selected')
+        pagination.appendChild(pageItem)
+      }
+
+      if (currentPage < pageCount) {
+        const nextButton = document.createElement('li')
+        nextButton.className = 'gitment-comments-page-item'
+        nextButton.innerText = 'Next'
+        nextButton.onclick = () => instance.goto(currentPage + 1)
+        pagination.appendChild(nextButton)
+      }
+
+      container.appendChild(pagination)
+    }
+  }
 
   return container
 }
@@ -136,7 +183,7 @@ function renderEditor({ user }, instance) {
     <div class="gitment-editor-main">
       <div class="gitment-editor-header">
         <nav class="gitment-editor-tabs">
-          <button class="gitment-editor-tab selected">Write</button>
+          <button class="gitment-editor-tab gitment-selected">Write</button>
           <button class="gitment-editor-tab">Preview</button>
         </nav>
         <div class="gitment-editor-login">
@@ -152,7 +199,7 @@ function renderEditor({ user }, instance) {
         <div class="gitment-editor-write-field">
           <textarea placeholder="Leave a comment" title="${disabledTip}" ${shouldDisable}></textarea>
         </div>
-        <div class="gitment-editor-preview-field hidden">
+        <div class="gitment-editor-preview-field gitment-hidden">
           <div class="gitment-editor-preview gitment-markdown"></div>
         </div>
       </div>
@@ -185,21 +232,29 @@ function renderEditor({ user }, instance) {
 
   const [writeTab, previewTab] = container.querySelectorAll('.gitment-editor-tab')
   writeTab.onclick = () => {
-    writeTab.classList.add('selected')
-    previewTab.classList.remove('selected')
-    writeField.classList.remove('hidden')
-    previewField.classList.add('hidden')
+    writeTab.classList.add('gitment-selected')
+    previewTab.classList.remove('gitment-selected')
+    writeField.classList.remove('gitment-hidden')
+    previewField.classList.add('gitment-hidden')
 
     textarea.focus()
   }
   previewTab.onclick = () => {
-    previewTab.classList.add('selected')
-    writeTab.classList.remove('selected')
-    previewField.classList.remove('hidden')
-    writeField.classList.add('hidden')
+    previewTab.classList.add('gitment-selected')
+    writeTab.classList.remove('gitment-selected')
+    previewField.classList.remove('gitment-hidden')
+    writeField.classList.add('gitment-hidden')
 
-    const content = textarea.value.trim() || 'Nothing to preview'
-    previewField.querySelector('.gitment-editor-preview').innerHTML = instance.marked(content)
+    const preview = previewField.querySelector('.gitment-editor-preview')
+    const content = textarea.value.trim()
+    if (!content) {
+      preview.innerText = 'Nothing to preview'
+      return
+    }
+
+    preview.innerText = 'Loading preview...'
+    instance.markdown(content)
+      .then(html => preview.innerHTML = html)
   }
 
   const submitButton = container.querySelector('.gitment-editor-submit')
