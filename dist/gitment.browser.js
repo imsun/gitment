@@ -3090,6 +3090,7 @@ function renderEditor(_ref3, instance) {
     submitButton.setAttribute('disabled', true);
     instance.post(textarea.value.trim()).then(function (data) {
       textarea.value = '';
+      textarea.style.height = 'auto';
       instance.state.comments.push(data);
       submitButton.removeAttribute('disabled');
       submitButton.innerText = 'Comment';
