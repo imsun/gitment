@@ -1,20 +1,12 @@
 var Gitment = Gitment || require('./gitment')
 
-const { client_id, client_secret } = window
+const config = window.config
 
-if (!client_id || !client_secret) {
-  throw new Error('You need to write your own client ID and client secret to `window` to run this test.')
+if (!config) {
+  throw new Error('You need your own config to run this test.')
 }
 
-const gitment = new Gitment({
-  id: 'test',
-  owner: 'imsun',
-  repo: 'test',
-  oauth: {
-    client_id,
-    client_secret,
-  },
-})
+const gitment = new Gitment(config)
 
 gitment.render('container')
 
