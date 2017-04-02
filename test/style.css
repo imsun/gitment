@@ -1,0 +1,11 @@
+body {
+  padding: 0 20px;
+  margin: 0 auto;
+  font-family: sans-serif;
+}
+
+@media (min-width: 780px) {
+  body {
+    max-width: 760px;
+  }
+}

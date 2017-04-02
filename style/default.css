@@ -67,6 +67,10 @@
   float: right;
 }
 
+.gitment-comment-like-btn.liked {
+  color: #f05f70;
+}
+
 .gitment-header-like-btn svg {
   vertical-align: middle;
   height: 30px;
