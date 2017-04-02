@@ -3,6 +3,7 @@ import { NOT_INITIALIZED_ERROR } from '../constants'
 
 function renderHeader({ meta, user, reactions }, instance) {
   const container = document.createElement('div')
+  container.lang = "en-US"
   container.className = 'gitment-container gitment-header-container'
 
   const likeButton = document.createElement('span')
@@ -40,6 +41,7 @@ function renderHeader({ meta, user, reactions }, instance) {
 
 function renderComments({ meta, comments, commentReactions, currentPage, user, error }, instance) {
   const container = document.createElement('div')
+  container.lang = "en-US"
   container.className = 'gitment-container gitment-comments-container'
 
   if (error) {
@@ -186,6 +188,7 @@ function renderComments({ meta, comments, commentReactions, currentPage, user, e
 
 function renderEditor({ user }, instance) {
   const container = document.createElement('div')
+  container.lang = "en-US"
   container.className = 'gitment-container gitment-editor-container'
 
   const shouldDisable = user.login ? '' : 'disabled'
@@ -303,6 +306,7 @@ function renderEditor({ user }, instance) {
 
 function renderFooter() {
   const container = document.createElement('div')
+  container.lang = "en-US"
   container.className = 'gitment-container gitment-footer-container'
   container.innerHTML = `
     Powered by
@@ -315,6 +319,7 @@ function renderFooter() {
 
 function render(state, instance) {
   const container = document.createElement('div')
+  container.lang = "en-US"
   container.className = 'gitment-container gitment-root-container'
   container.appendChild(instance.renderHeader(state, instance))
   container.appendChild(instance.renderComments(state, instance))
