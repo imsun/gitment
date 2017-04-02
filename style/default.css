@@ -124,7 +124,6 @@ a.gitment-header-issue-link:hover {
   position: absolute;
   bottom: 0;
   left: 79px;
-  z-index: -1;
   display: block;
   width: 2px;
   content: "";
