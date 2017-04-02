@@ -286,6 +286,7 @@ function renderEditor({ user }, instance) {
     instance.post(textarea.value.trim())
       .then(data => {
         textarea.value = ''
+        textarea.style.height = 'auto'
         instance.state.comments.push(data)
         submitButton.removeAttribute('disabled')
         submitButton.innerText = 'Comment'
