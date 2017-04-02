@@ -282,8 +282,8 @@ a.gitment-editor-logout-link:hover {
   top: 0;
   bottom: 50px;
   pointer-events: none;
-  background: -webkit-linear-gradient(top, rgba(0, 0, 0, 0), rgba(255, 255, 255, .9));
-  background: linear-gradient(180deg, rgba(0, 0, 0, 0), rgba(255, 255, 255, .9));
+  background: -webkit-linear-gradient(top, rgba(255, 255, 255, 0), rgba(255, 255, 255, .9));
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0), rgba(255, 255, 255, .9));
 }
 
 .gitment-comment-body-folded::after {
