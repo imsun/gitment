@@ -57,6 +57,7 @@ class Gitment {
       theme: defaultTheme,
       oauth: {},
       perPage: 30,
+      maxCommentHeight: 250,
     }, options)
 
     this.useTheme(this.theme)

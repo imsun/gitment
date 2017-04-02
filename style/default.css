@@ -173,7 +173,7 @@ a.gitment-header-issue-link:hover {
   width: 0;
   height: 0;
   pointer-events: none;
-  content: " ";
+  content: "";
   border-color: transparent;
   border-style: solid solid outset;
 }
@@ -264,7 +264,41 @@ a.gitment-editor-logout-link:hover {
 
 
 .gitment-comment-body {
+  position: relative;
   padding: 15px;
+  overflow: hidden;
+}
+
+.gitment-comment-body-folded {
+  cursor: pointer;
+}
+
+.gitment-comment-body-folded::before {
+  display: block !important;
+  content: "";
+  position: absolute;
+  width: 100%;
+  left: 0;
+  top: 0;
+  bottom: 50px;
+  pointer-events: none;
+  background: -webkit-linear-gradient(top, rgba(0, 0, 0, 0), rgba(255, 255, 255, .9));
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0), rgba(255, 255, 255, .9));
+}
+
+.gitment-comment-body-folded::after {
+  display: block !important;
+  content: "Click to Expand" !important;
+  text-align: center;
+  color: #586069;
+  position: absolute;
+  width: 100%;
+  height: 50px;
+  line-height: 50px;
+  left: 0;
+  bottom: 0;
+  pointer-events: none;
+  background: rgba(255, 255, 255, .9);
 }
 
 .gitment-editor-body {
@@ -331,7 +365,7 @@ a.gitment-editor-logout-link:hover {
 .gitment-editor-footer::after {
   display: table;
   clear: both;
-  content: " ";
+  content: "";
 }
 
 a.gitment-editor-footer-tip {

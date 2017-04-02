@@ -119,6 +119,28 @@ function renderComments({ meta, comments, commentReactions, currentPage, user, e
       likeButton.classList.remove('liked')
       likeButton.onclick = () => instance.likeAComment(comment.id)
     }
+
+    // dirty
+    // use a blank image to trigger height calculating when element rendered
+    const imgTrigger = document.createElement('img')
+    const markdownBody = commentItem.querySelector('.gitment-comment-body')
+    imgTrigger.className = 'gitment-hidden'
+    imgTrigger.src = "data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=="
+    imgTrigger.onload = () => {
+      if (markdownBody.clientHeight > instance.maxCommentHeight) {
+        markdownBody.classList.add('gitment-comment-body-folded')
+        markdownBody.style.maxHeight = instance.maxCommentHeight + 'px'
+        markdownBody.title = 'Click to Expand'
+        markdownBody.onclick = () => {
+          markdownBody.classList.remove('gitment-comment-body-folded')
+          markdownBody.style.maxHeight = ''
+          markdownBody.title = ''
+          markdownBody.onclick = null
+        }
+      }
+    }
+    commentItem.appendChild(imgTrigger)
+
     commentsList.appendChild(commentItem)
   })
 
