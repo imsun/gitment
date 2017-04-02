@@ -4,7 +4,7 @@ import { LS_ACCESS_TOKEN_KEY, LS_USER_KEY, NOT_INITIALIZED_ERROR } from './const
 import { getTargetContainer, http, Query } from './utils'
 import defaultTheme from './theme/default'
 
-const scope = 'repo'
+const scope = 'public_repo'
 
 function extendRenderer(instance, renderer) {
   instance[renderer] = (container) => {
