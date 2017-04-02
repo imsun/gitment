@@ -62,7 +62,7 @@ function renderComments(_ref2, instance) {
     var errorBlock = document.createElement('div');
     errorBlock.className = 'gitment-comments-error';
 
-    if (error === _constants.NOT_INITIALIZED_ERROR && (user.permission === 'admin' || user.permission === 'write')) {
+    if (error === _constants.NOT_INITIALIZED_ERROR && user.login.toLowerCase() === instance.owner.toLowerCase()) {
       var initHint = document.createElement('div');
       var initButton = document.createElement('button');
       initButton.className = 'gitment-comments-init-btn';
@@ -119,6 +119,28 @@ function renderComments(_ref2, instance) {
         return instance.likeAComment(comment.id);
       };
     }
+
+    // dirty
+    // use a blank image to trigger height calculating when element rendered
+    var imgTrigger = document.createElement('img');
+    var markdownBody = commentItem.querySelector('.gitment-comment-body');
+    imgTrigger.className = 'gitment-hidden';
+    imgTrigger.src = "data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==";
+    imgTrigger.onload = function () {
+      if (markdownBody.clientHeight > instance.maxCommentHeight) {
+        markdownBody.classList.add('gitment-comment-body-folded');
+        markdownBody.style.maxHeight = instance.maxCommentHeight + 'px';
+        markdownBody.title = 'Click to Expand';
+        markdownBody.onclick = function () {
+          markdownBody.classList.remove('gitment-comment-body-folded');
+          markdownBody.style.maxHeight = '';
+          markdownBody.title = '';
+          markdownBody.onclick = null;
+        };
+      }
+    };
+    commentItem.appendChild(imgTrigger);
+
     commentsList.appendChild(commentItem);
   });
 
