@@ -1,7 +1,24 @@
 {
   "name": "gitment",
-  "version": "0.0.1",
+  "version": "0.0.2",
+  "description": "A comment system based on GitHub Issues",
   "main": "./dist/gitment.js",
+  "author": {
+    "name": "Shiquan Sun",
+    "url": "https://github.com/imsun"
+  },
+  "keywords": [
+    "comment system",
+    "GitHub Issues"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/imsun/gitment"
+  },
+  "bugs": {
+    "url": "https://github.com/imsun/gitment/issues"
+  },
+  "homepage": "https://github.com/imsun/gitment",
   "scripts": {
     "build": "babel src --out-dir dist --ignore test.js --source-maps & NODE_ENV=production webpack --config webpack.config.js --progress --profile --colors",
     "dev": "webpack-dev-server --config webpack.dev.config.js --host 0.0.0.0 --progress --profile --colors"
@@ -16,5 +33,6 @@
   },
   "dependencies": {
     "mobx": "^3.1.7"
-  }
+  },
+  "license": "MIT"
 }
