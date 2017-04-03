@@ -199,7 +199,7 @@ function renderEditor({ user }, instance) {
         ? `<a class="gitment-editor-avatar" href="${user.html_url}" target="_blank">
             <img class="gitment-editor-avatar-img" src="${user.avatar_url}"/>
           </a>`
-        : user.loginning
+        : user.isLoggingIn
           ? `<div class="gitment-editor-avatar">${spinnerIcon}</div>`
           : `<a class="gitment-editor-avatar" href="${instance.loginLink}" title="login with GitHub">
               ${githubIcon}
@@ -215,8 +215,8 @@ function renderEditor({ user }, instance) {
         <div class="gitment-editor-login">
           ${ user.login
             ? '<a class="gitment-editor-logout-link">Logout</a>'
-            : user.loginning
-              ? 'Loginning...'
+            : user.isLoggingIn
+              ? 'Logging in...'
               : `<a class="gitment-editor-login-link" href="${instance.loginLink}">Login</a> with GitHub`
           }
         </div>

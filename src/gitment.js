@@ -98,7 +98,7 @@ class Gitment {
         link: replacedUrl,
       }, options)
 
-      this.state.user.loginning = true
+      this.state.user.isLoggingIn = true
       http.post('https://gh-oauth.imsun.net', {
           code,
           client_id,
@@ -109,7 +109,7 @@ class Gitment {
           this.update()
         })
         .catch(e => {
-          this.user.loginning = false
+          this.state.user.isLoggingIn = false
           alert(e)
         })
     } else {
