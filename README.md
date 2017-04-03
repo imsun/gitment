@@ -11,7 +11,7 @@ which can be used in the frontend without any server-side implementation.
 
 [Demo Page](https://imsun.github.io/gitment/)
 
-[中文简介](https://imsun.net/pages/gitment-introduction/)
+[中文简介](https://imsun.net/posts/gitment-introduction/)
 
 - [Features](#features)
 - [Get Started](#get-started)
