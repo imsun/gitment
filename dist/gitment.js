@@ -78,7 +78,7 @@ var Gitment = function () {
       labels: [],
       theme: _default2.default,
       oauth: {},
-      perPage: 30,
+      perPage: 20,
       maxCommentHeight: 250
     }, options);
 
@@ -123,7 +123,7 @@ var Gitment = function () {
         link: replacedUrl
       }, options);
 
-      this.state.user.loginning = true;
+      this.state.user.isLoggingIn = true;
       _utils.http.post('https://gh-oauth.imsun.net', {
         code: code,
         client_id: client_id,
@@ -132,7 +132,7 @@ var Gitment = function () {
         _this.accessToken = data.access_token;
         _this.update();
       }).catch(function (e) {
-        _this.user.loginning = false;
+        _this.state.user.isLoggingIn = false;
         alert(e);
       });
     } else {
@@ -220,14 +220,23 @@ var Gitment = function () {
   }, {
     key: 'post',
     value: function post(body) {
+      var _this6 = this;
+
       return this.getIssue().then(function (issue) {
         return _utils.http.post(issue.comments_url, { body: body }, '');
+      }).then(function (data) {
+        _this6.state.meta.comments++;
+        var pageCount = Math.ceil(_this6.state.meta.comments / _this6.perPage);
+        if (_this6.state.currentPage === pageCount) {
+          _this6.state.comments.push(data);
+        }
+        return data;
       });
     }
   }, {
     key: 'loadMeta',
     value: function loadMeta() {
-      var _this6 = this;
+      var _this7 = this;
 
       var id = this.id,
           owner = this.owner,
@@ -238,28 +247,28 @@ var Gitment = function () {
         labels: id
       }).then(function (issues) {
         if (!issues.length) return Promise.reject(_constants.NOT_INITIALIZED_ERROR);
-        _this6.state.meta = issues[0];
+        _this7.state.meta = issues[0];
         return issues[0];
       });
     }
   }, {
     key: 'loadComments',
     value: function loadComments() {
-      var _this7 = this;
+      var _this8 = this;
 
       var page = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : this.state.currentPage;
 
       return this.getIssue().then(function (issue) {
-        return _utils.http.get(issue.comments_url, { page: page, per_page: _this7.perPage }, '');
+        return _utils.http.get(issue.comments_url, { page: page, per_page: _this8.perPage }, '');
       }).then(function (comments) {
-        _this7.state.comments = comments;
+        _this8.state.comments = comments;
         return comments;
       });
     }
   }, {
     key: 'loadUserInfo',
     value: function loadUserInfo() {
-      var _this8 = this;
+      var _this9 = this;
 
       if (!this.accessToken) {
         this.logout();
@@ -267,7 +276,7 @@ var Gitment = function () {
       }
 
       return _utils.http.get('/user').then(function (user) {
-        _this8.state.user = user;
+        _this9.state.user = user;
         localStorage.setItem(_constants.LS_USER_KEY, JSON.stringify(user));
         return user;
       });
@@ -275,7 +284,7 @@ var Gitment = function () {
   }, {
     key: 'loadReactions',
     value: function loadReactions() {
-      var _this9 = this;
+      var _this10 = this;
 
       if (!this.accessToken) {
         this.state.reactions = [];
@@ -283,17 +292,17 @@ var Gitment = function () {
       }
 
       return this.getIssue().then(function (issue) {
-        if (!issue.reactions.heart) return [];
-        return _utils.http.get(issue.reactions.url, { content: 'heart' }, '');
+        if (!issue.reactions.total_count) return [];
+        return _utils.http.get(issue.reactions.url, {}, '');
       }).then(function (reactions) {
-        _this9.state.reactions = reactions;
+        _this10.state.reactions = reactions;
         return reactions;
       });
     }
   }, {
     key: 'loadCommentReactions',
     value: function loadCommentReactions() {
-      var _this10 = this;
+      var _this11 = this;
 
       if (!this.accessToken) {
         this.state.commentReactions = {};
@@ -304,17 +313,17 @@ var Gitment = function () {
       var comentReactions = {};
 
       return Promise.all(comments.map(function (comment) {
-        if (!comment.reactions.heart) return [];
+        if (!comment.reactions.total_count) return [];
 
-        var owner = _this10.owner,
-            repo = _this10.repo;
+        var owner = _this11.owner,
+            repo = _this11.repo;
 
-        return _utils.http.get('/repos/' + owner + '/' + repo + '/issues/comments/' + comment.id + '/reactions', { content: 'heart' });
+        return _utils.http.get('/repos/' + owner + '/' + repo + '/issues/comments/' + comment.id + '/reactions', {});
       })).then(function (reactionsArray) {
         comments.forEach(function (comment, index) {
           comentReactions[comment.id] = reactionsArray[index];
         });
-        _this10.state.commentReactions = comentReactions;
+        _this11.state.commentReactions = comentReactions;
 
         return comentReactions;
       });
@@ -341,7 +350,7 @@ var Gitment = function () {
   }, {
     key: 'like',
     value: function like() {
-      var _this11 = this;
+      var _this12 = this;
 
       if (!this.accessToken) {
         alert('Login to Like');
@@ -355,14 +364,14 @@ var Gitment = function () {
       return _utils.http.post('/repos/' + owner + '/' + repo + '/issues/' + this.state.meta.number + '/reactions', {
         content: 'heart'
       }).then(function (reaction) {
-        _this11.state.reactions.push(reaction);
-        _this11.state.meta.reactions.heart++;
+        _this12.state.reactions.push(reaction);
+        _this12.state.meta.reactions.heart++;
       });
     }
   }, {
     key: 'unlike',
     value: function unlike() {
-      var _this12 = this;
+      var _this13 = this;
 
       if (!this.accessToken) return Promise.reject();
 
@@ -375,13 +384,13 @@ var Gitment = function () {
       });
       return _utils.http.delete('/reactions/' + reactions[index].id).then(function () {
         reactions.splice(index, 1);
-        _this12.state.meta.reactions.heart--;
+        _this13.state.meta.reactions.heart--;
       });
     }
   }, {
     key: 'likeAComment',
     value: function likeAComment(commentId) {
-      var _this13 = this;
+      var _this14 = this;
 
       if (!this.accessToken) {
         alert('Login to Like');
@@ -398,7 +407,7 @@ var Gitment = function () {
       return _utils.http.post('/repos/' + owner + '/' + repo + '/issues/comments/' + commentId + '/reactions', {
         content: 'heart'
       }).then(function (reaction) {
-        _this13.state.commentReactions[commentId].push(reaction);
+        _this14.state.commentReactions[commentId].push(reaction);
         comment.reactions.heart++;
       });
     }

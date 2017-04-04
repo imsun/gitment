@@ -2849,10 +2849,11 @@ function renderHeader(_ref, instance) {
 
   var likeButton = document.createElement('span');
   var likedReaction = reactions.find(function (reaction) {
-    return reaction.user.login === user.login;
+    return reaction.content === 'heart' && reaction.user.login === user.login;
   });
   likeButton.className = 'gitment-header-like-btn';
   likeButton.innerHTML = '\n    ' + _icons.heart + '\n    ' + (likedReaction ? 'Unlike' : 'Like') + '\n    ' + (meta.reactions && meta.reactions.heart ? ' \u2022 <strong>' + meta.reactions.heart + '</strong> Liked' : '') + '\n  ';
+
   if (likedReaction) {
     likeButton.classList.add('liked');
     likeButton.onclick = function () {
@@ -2865,6 +2866,10 @@ function renderHeader(_ref, instance) {
     };
   }
   container.appendChild(likeButton);
+
+  var commentsCount = document.createElement('span');
+  commentsCount.innerHTML = '\n    ' + (meta.comments ? ' \u2022 <strong>' + meta.comments + '</strong> Comments' : '') + '\n  ';
+  container.appendChild(commentsCount);
 
   var issueLink = document.createElement('a');
   issueLink.className = 'gitment-header-issue-link';
@@ -2936,7 +2941,7 @@ function renderComments(_ref2, instance) {
     commentItem.innerHTML = '\n      <a class="gitment-comment-avatar" href="' + comment.user.html_url + '" target="_blank">\n        <img class="gitment-comment-avatar-img" src="' + comment.user.avatar_url + '"/>\n      </a>\n      <div class="gitment-comment-main">\n        <div class="gitment-comment-header">\n          <a class="gitment-comment-name" href="' + comment.user.html_url + '" target="_blank">\n            ' + comment.user.login + '\n          </a>\n          commented on\n          <span title="' + createDate + '">' + createDate.toDateString() + '</span>\n          ' + (createDate.toString() !== updateDate.toString() ? ' \u2022 <span title="comment was edited at ' + updateDate + '">edited</span>' : '') + '\n          <div class="gitment-comment-like-btn">' + _icons.heart + ' ' + (comment.reactions.heart || '') + '</div>\n        </div>\n        <div class="gitment-comment-body gitment-markdown">' + comment.body_html + '</div>\n      </div>\n    ';
     var likeButton = commentItem.querySelector('.gitment-comment-like-btn');
     var likedReaction = commentReactions[comment.id] && commentReactions[comment.id].find(function (reaction) {
-      return reaction.user.login === user.login;
+      return reaction.content === 'heart' && reaction.user.login === user.login;
     });
     if (likedReaction) {
       likeButton.classList.add('liked');
@@ -3025,15 +3030,16 @@ function renderComments(_ref2, instance) {
 }
 
 function renderEditor(_ref3, instance) {
-  var user = _ref3.user;
+  var user = _ref3.user,
+      error = _ref3.error;
 
   var container = document.createElement('div');
   container.lang = "en-US";
   container.className = 'gitment-container gitment-editor-container';
 
-  var shouldDisable = user.login ? '' : 'disabled';
+  var shouldDisable = user.login && !error ? '' : 'disabled';
   var disabledTip = user.login ? '' : 'Login to Comment';
-  container.innerHTML = '\n      ' + (user.login ? '<a class="gitment-editor-avatar" href="' + user.html_url + '" target="_blank">\n            <img class="gitment-editor-avatar-img" src="' + user.avatar_url + '"/>\n          </a>' : user.loginning ? '<div class="gitment-editor-avatar">' + _icons.spinner + '</div>' : '<a class="gitment-editor-avatar" href="' + instance.loginLink + '" title="login with GitHub">\n              ' + _icons.github + '\n            </a>') + '\n    </a>\n    <div class="gitment-editor-main">\n      <div class="gitment-editor-header">\n        <nav class="gitment-editor-tabs">\n          <button class="gitment-editor-tab gitment-selected">Write</button>\n          <button class="gitment-editor-tab">Preview</button>\n        </nav>\n        <div class="gitment-editor-login">\n          ' + (user.login ? '<a class="gitment-editor-logout-link">Logout</a>' : user.loginning ? 'Loginning...' : '<a class="gitment-editor-login-link" href="' + instance.loginLink + '">Login</a> with GitHub') + '\n        </div>\n      </div>\n      <div class="gitment-editor-body">\n        <div class="gitment-editor-write-field">\n          <textarea placeholder="Leave a comment" title="' + disabledTip + '" ' + shouldDisable + '></textarea>\n        </div>\n        <div class="gitment-editor-preview-field gitment-hidden">\n          <div class="gitment-editor-preview gitment-markdown"></div>\n        </div>\n      </div>\n      <div class="gitment-editor-footer">\n        <a class="gitment-editor-footer-tip" href="https://guides.github.com/features/mastering-markdown/" target="_blank">\n          Styling with Markdown is supported\n        </a>\n        <button class="gitment-editor-submit" title="' + disabledTip + '" ' + shouldDisable + '>Comment</button>\n      </div>\n    </div>\n  ';
+  container.innerHTML = '\n      ' + (user.login ? '<a class="gitment-editor-avatar" href="' + user.html_url + '" target="_blank">\n            <img class="gitment-editor-avatar-img" src="' + user.avatar_url + '"/>\n          </a>' : user.isLoggingIn ? '<div class="gitment-editor-avatar">' + _icons.spinner + '</div>' : '<a class="gitment-editor-avatar" href="' + instance.loginLink + '" title="login with GitHub">\n              ' + _icons.github + '\n            </a>') + '\n    </a>\n    <div class="gitment-editor-main">\n      <div class="gitment-editor-header">\n        <nav class="gitment-editor-tabs">\n          <button class="gitment-editor-tab gitment-selected">Write</button>\n          <button class="gitment-editor-tab">Preview</button>\n        </nav>\n        <div class="gitment-editor-login">\n          ' + (user.login ? '<a class="gitment-editor-logout-link">Logout</a>' : user.isLoggingIn ? 'Logging in...' : '<a class="gitment-editor-login-link" href="' + instance.loginLink + '">Login</a> with GitHub') + '\n        </div>\n      </div>\n      <div class="gitment-editor-body">\n        <div class="gitment-editor-write-field">\n          <textarea placeholder="Leave a comment" title="' + disabledTip + '" ' + shouldDisable + '></textarea>\n        </div>\n        <div class="gitment-editor-preview-field gitment-hidden">\n          <div class="gitment-editor-preview gitment-markdown"></div>\n        </div>\n      </div>\n    </div>\n    <div class="gitment-editor-footer">\n      <a class="gitment-editor-footer-tip" href="https://guides.github.com/features/mastering-markdown/" target="_blank">\n        Styling with Markdown is supported\n      </a>\n      <button class="gitment-editor-submit" title="' + disabledTip + '" ' + shouldDisable + '>Comment</button>\n    </div>\n  ';
   if (user.login) {
     container.querySelector('.gitment-editor-logout-link').onclick = function () {
       return instance.logout();
@@ -3094,7 +3100,6 @@ function renderEditor(_ref3, instance) {
     instance.post(textarea.value.trim()).then(function (data) {
       textarea.value = '';
       textarea.style.height = 'auto';
-      instance.state.comments.push(data);
       submitButton.removeAttribute('disabled');
       submitButton.innerText = 'Comment';
     }).catch(function (e) {
@@ -3362,7 +3367,7 @@ var Gitment = function () {
       labels: [],
       theme: _default2.default,
       oauth: {},
-      perPage: 30,
+      perPage: 20,
       maxCommentHeight: 250
     }, options);
 
@@ -3407,7 +3412,7 @@ var Gitment = function () {
         link: replacedUrl
       }, options);
 
-      this.state.user.loginning = true;
+      this.state.user.isLoggingIn = true;
       _utils.http.post('https://gh-oauth.imsun.net', {
         code: code,
         client_id: client_id,
@@ -3416,7 +3421,7 @@ var Gitment = function () {
         _this.accessToken = data.access_token;
         _this.update();
       }).catch(function (e) {
-        _this.user.loginning = false;
+        _this.state.user.isLoggingIn = false;
         alert(e);
       });
     } else {
@@ -3504,14 +3509,23 @@ var Gitment = function () {
   }, {
     key: 'post',
     value: function post(body) {
+      var _this6 = this;
+
       return this.getIssue().then(function (issue) {
         return _utils.http.post(issue.comments_url, { body: body }, '');
+      }).then(function (data) {
+        _this6.state.meta.comments++;
+        var pageCount = Math.ceil(_this6.state.meta.comments / _this6.perPage);
+        if (_this6.state.currentPage === pageCount) {
+          _this6.state.comments.push(data);
+        }
+        return data;
       });
     }
   }, {
     key: 'loadMeta',
     value: function loadMeta() {
-      var _this6 = this;
+      var _this7 = this;
 
       var id = this.id,
           owner = this.owner,
@@ -3522,28 +3536,28 @@ var Gitment = function () {
         labels: id
       }).then(function (issues) {
         if (!issues.length) return Promise.reject(_constants.NOT_INITIALIZED_ERROR);
-        _this6.state.meta = issues[0];
+        _this7.state.meta = issues[0];
         return issues[0];
       });
     }
   }, {
     key: 'loadComments',
     value: function loadComments() {
-      var _this7 = this;
+      var _this8 = this;
 
       var page = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : this.state.currentPage;
 
       return this.getIssue().then(function (issue) {
-        return _utils.http.get(issue.comments_url, { page: page, per_page: _this7.perPage }, '');
+        return _utils.http.get(issue.comments_url, { page: page, per_page: _this8.perPage }, '');
       }).then(function (comments) {
-        _this7.state.comments = comments;
+        _this8.state.comments = comments;
         return comments;
       });
     }
   }, {
     key: 'loadUserInfo',
     value: function loadUserInfo() {
-      var _this8 = this;
+      var _this9 = this;
 
       if (!this.accessToken) {
         this.logout();
@@ -3551,7 +3565,7 @@ var Gitment = function () {
       }
 
       return _utils.http.get('/user').then(function (user) {
-        _this8.state.user = user;
+        _this9.state.user = user;
         localStorage.setItem(_constants.LS_USER_KEY, JSON.stringify(user));
         return user;
       });
@@ -3559,7 +3573,7 @@ var Gitment = function () {
   }, {
     key: 'loadReactions',
     value: function loadReactions() {
-      var _this9 = this;
+      var _this10 = this;
 
       if (!this.accessToken) {
         this.state.reactions = [];
@@ -3567,17 +3581,17 @@ var Gitment = function () {
       }
 
       return this.getIssue().then(function (issue) {
-        if (!issue.reactions.heart) return [];
-        return _utils.http.get(issue.reactions.url, { content: 'heart' }, '');
+        if (!issue.reactions.total_count) return [];
+        return _utils.http.get(issue.reactions.url, {}, '');
       }).then(function (reactions) {
-        _this9.state.reactions = reactions;
+        _this10.state.reactions = reactions;
         return reactions;
       });
     }
   }, {
     key: 'loadCommentReactions',
     value: function loadCommentReactions() {
-      var _this10 = this;
+      var _this11 = this;
 
       if (!this.accessToken) {
         this.state.commentReactions = {};
@@ -3588,17 +3602,17 @@ var Gitment = function () {
       var comentReactions = {};
 
       return Promise.all(comments.map(function (comment) {
-        if (!comment.reactions.heart) return [];
+        if (!comment.reactions.total_count) return [];
 
-        var owner = _this10.owner,
-            repo = _this10.repo;
+        var owner = _this11.owner,
+            repo = _this11.repo;
 
-        return _utils.http.get('/repos/' + owner + '/' + repo + '/issues/comments/' + comment.id + '/reactions', { content: 'heart' });
+        return _utils.http.get('/repos/' + owner + '/' + repo + '/issues/comments/' + comment.id + '/reactions', {});
       })).then(function (reactionsArray) {
         comments.forEach(function (comment, index) {
           comentReactions[comment.id] = reactionsArray[index];
         });
-        _this10.state.commentReactions = comentReactions;
+        _this11.state.commentReactions = comentReactions;
 
         return comentReactions;
       });
@@ -3625,7 +3639,7 @@ var Gitment = function () {
   }, {
     key: 'like',
     value: function like() {
-      var _this11 = this;
+      var _this12 = this;
 
       if (!this.accessToken) {
         alert('Login to Like');
@@ -3639,14 +3653,14 @@ var Gitment = function () {
       return _utils.http.post('/repos/' + owner + '/' + repo + '/issues/' + this.state.meta.number + '/reactions', {
         content: 'heart'
       }).then(function (reaction) {
-        _this11.state.reactions.push(reaction);
-        _this11.state.meta.reactions.heart++;
+        _this12.state.reactions.push(reaction);
+        _this12.state.meta.reactions.heart++;
       });
     }
   }, {
     key: 'unlike',
     value: function unlike() {
-      var _this12 = this;
+      var _this13 = this;
 
       if (!this.accessToken) return Promise.reject();
 
@@ -3659,13 +3673,13 @@ var Gitment = function () {
       });
       return _utils.http.delete('/reactions/' + reactions[index].id).then(function () {
         reactions.splice(index, 1);
-        _this12.state.meta.reactions.heart--;
+        _this13.state.meta.reactions.heart--;
       });
     }
   }, {
     key: 'likeAComment',
     value: function likeAComment(commentId) {
-      var _this13 = this;
+      var _this14 = this;
 
       if (!this.accessToken) {
         alert('Login to Like');
@@ -3682,7 +3696,7 @@ var Gitment = function () {
       return _utils.http.post('/repos/' + owner + '/' + repo + '/issues/comments/' + commentId + '/reactions', {
         content: 'heart'
       }).then(function (reaction) {
-        _this13.state.commentReactions[commentId].push(reaction);
+        _this14.state.commentReactions[commentId].push(reaction);
         comment.reactions.heart++;
       });
     }
