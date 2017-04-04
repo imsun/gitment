@@ -103,7 +103,7 @@ Type: `object`
 - desc: An optional description for your page, used in issue's body. Default `''`.
 - labels: An optional array of labels your want to add when creating the issue. Default `[]`.
 - theme: An optional Gitment theme object. Default `gitment.defaultTheme`.
-- perPage: An optional number to which comments will be paginated. Default `30`.
+- perPage: An optional number to which comments will be paginated. Default `20`.
 - maxCommentHeight: An optional number to limit comments' max height, over which comments will be folded. Default `250`.
 
 ### gitment.render([element])

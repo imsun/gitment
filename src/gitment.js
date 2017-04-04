@@ -56,7 +56,7 @@ class Gitment {
       labels: [],
       theme: defaultTheme,
       oauth: {},
-      perPage: 30,
+      perPage: 20,
       maxCommentHeight: 250,
     }, options)
 
@@ -172,6 +172,14 @@ class Gitment {
   post(body) {
     return this.getIssue()
       .then(issue => http.post(issue.comments_url, { body }, ''))
+      .then(data => {
+        this.state.meta.comments++
+        const pageCount = Math.ceil(this.state.meta.comments / this.perPage)
+        if (this.state.currentPage === pageCount) {
+          this.state.comments.push(data)
+        }
+        return data
+      })
   }
 
   loadMeta() {
@@ -218,8 +226,8 @@ class Gitment {
 
     return this.getIssue()
       .then((issue) => {
-        if (!issue.reactions.heart) return []
-        return http.get(issue.reactions.url, { content: 'heart' }, '')
+        if (!issue.reactions.total_count) return []
+        return http.get(issue.reactions.url, {}, '')
       })
       .then((reactions) => {
         this.state.reactions = reactions
@@ -237,10 +245,10 @@ class Gitment {
     const comentReactions = {}
 
     return Promise.all(comments.map((comment) => {
-      if (!comment.reactions.heart) return []
+      if (!comment.reactions.total_count) return []
 
       const { owner, repo } = this
-      return http.get(`/repos/${owner}/${repo}/issues/comments/${comment.id}/reactions`, { content: 'heart' })
+      return http.get(`/repos/${owner}/${repo}/issues/comments/${comment.id}/reactions`, {})
     }))
       .then(reactionsArray => {
         comments.forEach((comment, index) => {
