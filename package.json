@@ -1,6 +1,6 @@
 {
   "name": "gitment",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "A comment system based on GitHub Issues",
   "main": "./dist/gitment.js",
   "author": {
