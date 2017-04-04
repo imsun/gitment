@@ -7,7 +7,9 @@ function renderHeader({ meta, user, reactions }, instance) {
   container.className = 'gitment-container gitment-header-container'
 
   const likeButton = document.createElement('span')
-  const likedReaction = reactions.find(reaction => reaction.user.login === user.login)
+  const likedReaction = reactions.find(reaction => (
+    reaction.content === 'heart' && reaction.user.login === user.login
+  ))
   likeButton.className = 'gitment-header-like-btn'
   likeButton.innerHTML = `
     ${heartIcon}
@@ -20,6 +22,7 @@ function renderHeader({ meta, user, reactions }, instance) {
       : ''
     }
   `
+
   if (likedReaction) {
     likeButton.classList.add('liked')
     likeButton.onclick = () => instance.unlike()
@@ -28,6 +31,15 @@ function renderHeader({ meta, user, reactions }, instance) {
     likeButton.onclick = () => instance.like()
   }
   container.appendChild(likeButton)
+
+  const commentsCount = document.createElement('span')
+  commentsCount.innerHTML = `
+    ${ meta.comments
+    ? ` • <strong>${meta.comments}</strong> Comments`
+    : ''
+    }
+  `
+  container.appendChild(commentsCount)
 
   const issueLink = document.createElement('a')
   issueLink.className = 'gitment-header-issue-link'
@@ -114,7 +126,9 @@ function renderComments({ meta, comments, commentReactions, currentPage, user, e
     `
     const likeButton = commentItem.querySelector('.gitment-comment-like-btn')
     const likedReaction = commentReactions[comment.id]
-      && commentReactions[comment.id].find(reaction => reaction.user.login === user.login)
+      && commentReactions[comment.id].find(reaction => (
+        reaction.content === 'heart' && reaction.user.login === user.login
+      ))
     if (likedReaction) {
       likeButton.classList.add('liked')
       likeButton.onclick = () => instance.unlikeAComment(comment.id)
@@ -150,7 +164,7 @@ function renderComments({ meta, comments, commentReactions, currentPage, user, e
   container.appendChild(commentsList)
 
   if (meta) {
-    let pageCount = Math.ceil(meta.comments / instance.perPage)
+    const pageCount = Math.ceil(meta.comments / instance.perPage)
     if (pageCount > 1) {
       const pagination = document.createElement('ul')
       pagination.className = 'gitment-comments-pagination'
@@ -187,12 +201,12 @@ function renderComments({ meta, comments, commentReactions, currentPage, user, e
   return container
 }
 
-function renderEditor({ user }, instance) {
+function renderEditor({ user, error }, instance) {
   const container = document.createElement('div')
   container.lang = "en-US"
   container.className = 'gitment-container gitment-editor-container'
 
-  const shouldDisable = user.login ? '' : 'disabled'
+  const shouldDisable = user.login && !error ? '' : 'disabled'
   const disabledTip = user.login ? '' : 'Login to Comment'
   container.innerHTML = `
       ${ user.login
@@ -229,12 +243,12 @@ function renderEditor({ user }, instance) {
           <div class="gitment-editor-preview gitment-markdown"></div>
         </div>
       </div>
-      <div class="gitment-editor-footer">
-        <a class="gitment-editor-footer-tip" href="https://guides.github.com/features/mastering-markdown/" target="_blank">
-          Styling with Markdown is supported
-        </a>
-        <button class="gitment-editor-submit" title="${disabledTip}" ${shouldDisable}>Comment</button>
-      </div>
+    </div>
+    <div class="gitment-editor-footer">
+      <a class="gitment-editor-footer-tip" href="https://guides.github.com/features/mastering-markdown/" target="_blank">
+        Styling with Markdown is supported
+      </a>
+      <button class="gitment-editor-submit" title="${disabledTip}" ${shouldDisable}>Comment</button>
     </div>
   `
   if (user.login) {
@@ -291,7 +305,6 @@ function renderEditor({ user }, instance) {
       .then(data => {
         textarea.value = ''
         textarea.style.height = 'auto'
-        instance.state.comments.push(data)
         submitButton.removeAttribute('disabled')
         submitButton.innerText = 'Comment'
       })
