@@ -339,4 +339,6 @@ class Gitment {
   }
 }
 
+Gitment.autorun = autorun
+
 module.exports = Gitment
