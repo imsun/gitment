@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>GitmentFrame</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+    }
+  </style>
+</head>
+<body>
+<script src="./dist/gitment.browser.js"></script>
+<script>
+  function init() {
+    window.addEventListener('message', function(e) {
+      if (!e.data || !e.data.id || !e.data.options) return
+      var id = e.data.id
+      var options = e.data.options
+      var style = document.createElement('link')
+      style.rel = 'stylesheet'
+      style.href = options.css
+      document.body.appendChild(style)
+
+      var gitment = new Gitment(options)
+      document.appendChild(gitment.render())
+      Gitment.autorun(function() {
+        parent.postMessage({
+          id: id,
+          state: gitment.state,
+        }, '*')
+      })
+    })
+  }
+  if (parent !== window) init()
+</script>
+</body>
+</html>
