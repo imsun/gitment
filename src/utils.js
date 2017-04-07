@@ -37,11 +37,14 @@ export const Query = {
 }
 
 function ajaxFactory(method) {
-  return function(apiPath, data = {}, base = 'https://api.github.com') {
+  return function(url, data = {}) {
     const req = new XMLHttpRequest()
     const token = localStorage.getItem(LS_ACCESS_TOKEN_KEY)
 
-    let url = `${base}${apiPath}`
+    if (!url.startsWith('http')) {
+      url = `https://api.github.com${url}`
+    }
+
     let body = null
     if (method === 'GET' || method === 'DELETE') {
       url += Query.stringify(data)

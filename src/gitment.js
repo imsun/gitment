@@ -55,7 +55,6 @@ class Gitment {
       desc: '',
       labels: [],
       theme: defaultTheme,
-      oauth: {},
       perPage: 20,
       maxCommentHeight: 250,
     }, options)
@@ -85,7 +84,7 @@ class Gitment {
     })
 
     const query = Query.parse()
-    if (query.code) {
+    if (this.oauth && query.code) {
       const { client_id, client_secret } = this.oauth
       const code = query.code
       delete query.code
@@ -103,7 +102,7 @@ class Gitment {
           code,
           client_id,
           client_secret,
-        }, '')
+        })
         .then(data => {
           this.accessToken = data.access_token
           this.update()
@@ -171,7 +170,7 @@ class Gitment {
 
   post(body) {
     return this.getIssue()
-      .then(issue => http.post(issue.comments_url, { body }, ''))
+      .then(issue => http.post(issue.comments_url, { body }))
       .then(data => {
         this.state.meta.comments++
         const pageCount = Math.ceil(this.state.meta.comments / this.perPage)
@@ -197,7 +196,7 @@ class Gitment {
 
   loadComments(page = this.state.currentPage) {
     return this.getIssue()
-      .then(issue => http.get(issue.comments_url, { page, per_page: this.perPage }, ''))
+      .then(issue => http.get(issue.comments_url, { page, per_page: this.perPage }))
       .then((comments) => {
         this.state.comments = comments
         return comments
@@ -227,7 +226,7 @@ class Gitment {
     return this.getIssue()
       .then((issue) => {
         if (!issue.reactions.total_count) return []
-        return http.get(issue.reactions.url, {}, '')
+        return http.get(issue.reactions.url)
       })
       .then((reactions) => {
         this.state.reactions = reactions
@@ -248,7 +247,7 @@ class Gitment {
       if (!comment.reactions.total_count) return []
 
       const { owner, repo } = this
-      return http.get(`/repos/${owner}/${repo}/issues/comments/${comment.id}/reactions`, {})
+      return http.get(`/repos/${owner}/${repo}/issues/comments/${comment.id}/reactions`)
     }))
       .then(reactionsArray => {
         comments.forEach((comment, index) => {
