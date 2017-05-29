@@ -27,6 +27,11 @@ which can be used in the frontend without any server-side implementation.
 - Notifications from GitHub
 - Easy to customize
 - No server-side implementation
+  - to choose both https://gh-oauth.imsun.net and [gh-oauth-server](https://github.com/imsun/gh-oauth-server), or
+  - php oauth proxy [intersect](https://github.com/aimingoo/intersect).
+- Force redirect protocol to support HTTPS/HTTP Github pages site, 
+- Support urlencoded for GET request and response data
+- No client_secret
 
 ## Get Started
 
@@ -67,6 +72,7 @@ const gitment = new Gitment({
   oauth: {
     client_id: 'Your client ID',
     client_secret: 'Your client secret',
+    // proxy_gateway: 'Your proxy service, either this or client_secret'
   },
   // ...
   // For more available options, check out the documentation below
@@ -83,7 +89,7 @@ gitment.render('comments')
 
 After the page published, you should visit your page, login with your GitHub account(make sure you're repo's owner), and click the initialize button, to create a related issue in your repo.
 After that, others can leave their comments.
-   
+
 ## Methods
 
 ### constructor(options)
@@ -207,7 +213,7 @@ You can inspect the DOM structure in the browser and write your own styles.
 ### Write A Theme
 
 A Gitment theme is an object contains several render functions.
- 
+
 By default Gitment has five render functions: `render`, `renderHeader`, `renderComments`, `renderEditor`, `renderFooter`.
 The last four render independent components and `render` function renders them together.
 All of them can be used independently.

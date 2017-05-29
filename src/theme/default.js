@@ -43,9 +43,9 @@ function renderHeader({ meta, user, reactions }, instance) {
 
   const issueLink = document.createElement('a')
   issueLink.className = 'gitment-header-issue-link'
-  issueLink.href = meta.html_url
+  issueLink.href = meta.html_url || "javascript:void(0)"
   issueLink.target = '_blank'
-  issueLink.innerText = 'Issue Page'
+  issueLink.innerText = $$C('Issue Page')
   container.appendChild(issueLink)
 
   return container
@@ -74,24 +74,24 @@ function renderComments({ meta, comments, commentReactions, currentPage, user, e
             alert(e)
           })
       }
-      initButton.innerText = 'Initialize Comments'
+      initButton.innerText = $$C('Initialize Comments')
       initHint.appendChild(initButton)
       errorBlock.appendChild(initHint)
     } else {
-      errorBlock.innerText = error
+      errorBlock.innerText = $$C(error)
     }
     container.appendChild(errorBlock)
     return container
   } else if (comments === undefined) {
     const loading = document.createElement('div')
-    loading.innerText = 'Loading comments...'
+    loading.innerText = $$C('Loading comments...')
     loading.className = 'gitment-comments-loading'
     container.appendChild(loading)
     return container
   } else if (!comments.length) {
     const emptyBlock = document.createElement('div')
     emptyBlock.className = 'gitment-comments-empty'
-    emptyBlock.innerText = 'No Comment Yet'
+    emptyBlock.innerText = $$C('No Comment Yet')
     container.appendChild(emptyBlock)
     return container
   }
@@ -172,7 +172,7 @@ function renderComments({ meta, comments, commentReactions, currentPage, user, e
       if (currentPage > 1) {
         const previousButton = document.createElement('li')
         previousButton.className = 'gitment-comments-page-item'
-        previousButton.innerText = 'Previous'
+        previousButton.innerText = $$C('Previous')
         previousButton.onclick = () => instance.goto(currentPage - 1)
         pagination.appendChild(previousButton)
       }
@@ -189,7 +189,7 @@ function renderComments({ meta, comments, commentReactions, currentPage, user, e
       if (currentPage < pageCount) {
         const nextButton = document.createElement('li')
         nextButton.className = 'gitment-comments-page-item'
-        nextButton.innerText = 'Next'
+        nextButton.innerText = $$C('Next')
         nextButton.onclick = () => instance.goto(currentPage + 1)
         pagination.appendChild(nextButton)
       }
@@ -223,21 +223,21 @@ function renderEditor({ user, error }, instance) {
     <div class="gitment-editor-main">
       <div class="gitment-editor-header">
         <nav class="gitment-editor-tabs">
-          <button class="gitment-editor-tab gitment-selected">Write</button>
-          <button class="gitment-editor-tab">Preview</button>
+          <button class="gitment-editor-tab gitment-selected">${$$C('Write')}</button>
+          <button class="gitment-editor-tab">${$$C('Preview')}</button>
         </nav>
         <div class="gitment-editor-login">
           ${ user.login
-            ? '<a class="gitment-editor-logout-link">Logout</a>'
+            ? `<a class="gitment-editor-logout-link">${$$C('Logout')}</a>`
             : user.isLoggingIn
-              ? 'Logging in...'
-              : `<a class="gitment-editor-login-link" href="${instance.loginLink}">Login</a> with GitHub`
+              ? $$C('Logging in...')
+              : `<a class="gitment-editor-login-link" href="${instance.loginLink}">${$$C('Login')}</a> with GitHub`
           }
         </div>
       </div>
       <div class="gitment-editor-body">
         <div class="gitment-editor-write-field">
-          <textarea placeholder="Leave a comment" title="${disabledTip}" ${shouldDisable}></textarea>
+          <textarea placeholder="${$$C('Leave a comment')}" title="${disabledTip}" ${shouldDisable}></textarea>
         </div>
         <div class="gitment-editor-preview-field gitment-hidden">
           <div class="gitment-editor-preview gitment-markdown"></div>
@@ -248,7 +248,7 @@ function renderEditor({ user, error }, instance) {
       <a class="gitment-editor-footer-tip" href="https://guides.github.com/features/mastering-markdown/" target="_blank">
         Styling with Markdown is supported
       </a>
-      <button class="gitment-editor-submit" title="${disabledTip}" ${shouldDisable}>Comment</button>
+      <button class="gitment-editor-submit" title="${disabledTip}" ${shouldDisable}>${$$C('Comment')}</button>
     </div>
   `
   if (user.login) {
@@ -288,30 +288,30 @@ function renderEditor({ user, error }, instance) {
     const preview = previewField.querySelector('.gitment-editor-preview')
     const content = textarea.value.trim()
     if (!content) {
-      preview.innerText = 'Nothing to preview'
+      preview.innerText = $$C('Nothing to preview')
       return
     }
 
-    preview.innerText = 'Loading preview...'
+    preview.innerText = $$C('Loading preview...')
     instance.markdown(content)
       .then(html => preview.innerHTML = html)
   }
 
   const submitButton = container.querySelector('.gitment-editor-submit')
   submitButton.onclick = () => {
-    submitButton.innerText = 'Submitting...'
+    submitButton.innerText = $$C('Submitting...')
     submitButton.setAttribute('disabled', true)
     instance.post(textarea.value.trim())
       .then(data => {
         textarea.value = ''
         textarea.style.height = 'auto'
         submitButton.removeAttribute('disabled')
-        submitButton.innerText = 'Comment'
+        submitButton.innerText = $$C('Comment')
       })
       .catch(e => {
         alert(e)
         submitButton.removeAttribute('disabled')
-        submitButton.innerText = 'Comment'
+        submitButton.innerText = $$C('Comment')
       })
   }
 

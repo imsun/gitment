@@ -3,8 +3,15 @@ import { autorun, observable } from 'mobx'
 import { LS_ACCESS_TOKEN_KEY, LS_USER_KEY, NOT_INITIALIZED_ERROR } from './constants'
 import { getTargetContainer, http, Query } from './utils'
 import defaultTheme from './theme/default'
+import { chinese as $$C } from './translator'
 
+// @see: https://developer.github.com/apps/building-integrations/setting-up-and-registering-oauth-apps/about-scopes-for-oauth-apps
 const scope = 'public_repo'
+
+// Github setting of 'Authorization callback URL' in your OAuth application
+const force_redirect_protocol = 'https'
+// A RegExp to match protocol and domain
+const rx_url_with_protocol = /^((https?:\/\/+){0,1}[^\/]*)(.*)/
 
 function extendRenderer(instance, renderer) {
   instance[renderer] = (container) => {
@@ -34,7 +41,7 @@ class Gitment {
 
   get loginLink() {
     const oauthUri = 'https://github.com/login/oauth/authorize'
-    const redirect_uri = this.oauth.redirect_uri || window.location.href
+    const redirect_uri = this.oauth.redirect_uri || window.location.href.replace(/^https?/i, force_redirect_protocol);
 
     const oauthParams = Object.assign({
       scope,
@@ -84,9 +91,11 @@ class Gitment {
       currentPage: 1,
     })
 
+    // NOTE: the gateway accept form-urlencoded only!!!
+    //  - PHP implement at https://github.com/aimingoo/intersect
     const query = Query.parse()
     if (query.code) {
-      const { client_id, client_secret } = this.oauth
+      const { client_id, client_secret, proxy_gateway } = this.oauth
       const code = query.code
       delete query.code
       const search = Query.stringify(query)
@@ -99,12 +108,10 @@ class Gitment {
       }, options)
 
       this.state.user.isLoggingIn = true
-      http.post('https://gh-oauth.imsun.net', {
-          code,
-          client_id,
-          client_secret,
-        }, '')
-        .then(data => {
+      var loging = !proxy_gateway
+        ? http.post('https://gh-oauth.imsun.net', {code, client_id, client_secret}, '')
+        : http.post('/login/oauth/access_token', `code=${code}&client_id=${client_id}`, proxy_gateway);
+      login.then(data => {
           this.accessToken = data.access_token
           this.update()
         })
@@ -171,7 +178,10 @@ class Gitment {
 
   post(body) {
     return this.getIssue()
-      .then(issue => http.post(issue.comments_url, { body }, ''))
+      .then(issue => {
+        let matched = issue.comments_url.match(rx_url_with_protocol)
+        return http.post(matched[3], { body: body }, matched[1]||undefined)
+      })
       .then(data => {
         this.state.meta.comments++
         const pageCount = Math.ceil(this.state.meta.comments / this.perPage)
@@ -197,7 +207,10 @@ class Gitment {
 
   loadComments(page = this.state.currentPage) {
     return this.getIssue()
-      .then(issue => http.get(issue.comments_url, { page, per_page: this.perPage }, ''))
+      .then(issue => {
+        let matched = issue.comments_url.match(rx_url_with_protocol)
+        return http.get(matched[3], { page: page, per_page: this.perPage }, matched[1]||undefined)
+      })
       .then((comments) => {
         this.state.comments = comments
         return comments
