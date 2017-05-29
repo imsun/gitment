@@ -3,7 +3,6 @@ import { autorun, observable } from 'mobx'
 import { LS_ACCESS_TOKEN_KEY, LS_USER_KEY, NOT_INITIALIZED_ERROR } from './constants'
 import { getTargetContainer, http, Query } from './utils'
 import defaultTheme from './theme/default'
-import { chinese as $$C } from './translator'
 
 // @see: https://developer.github.com/apps/building-integrations/setting-up-and-registering-oauth-apps/about-scopes-for-oauth-apps
 const scope = 'public_repo'

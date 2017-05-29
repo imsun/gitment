@@ -1,5 +1,6 @@
 import { github as githubIcon, heart as heartIcon, spinner as spinnerIcon } from '../icons'
 import { NOT_INITIALIZED_ERROR } from '../constants'
+import { chinese as $$C } from '../translator'
 
 function renderHeader({ meta, user, reactions }, instance) {
   const container = document.createElement('div')
