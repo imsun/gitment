@@ -107,7 +107,7 @@ class Gitment {
       }, options)
 
       this.state.user.isLoggingIn = true
-      var loging = !proxy_gateway
+      var login = !proxy_gateway
         ? http.post('https://gh-oauth.imsun.net', {code, client_id, client_secret}, '')
         : http.post('/login/oauth/access_token', `code=${code}&client_id=${client_id}`, proxy_gateway);
       login.then(data => {
