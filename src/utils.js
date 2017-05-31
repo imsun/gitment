@@ -40,39 +40,47 @@ function ajaxFactory(method) {
   return function(apiPath, data = {}, base = 'https://api.github.com') {
     const req = new XMLHttpRequest()
     const token = localStorage.getItem(LS_ACCESS_TOKEN_KEY)
+    if (base !== 'https://api.github.com') token = null;
 
     let url = `${base}${apiPath}`
     let body = null
     if (method === 'GET' || method === 'DELETE') {
-      url += Query.stringify(data)
+      url += isString(data) ? data : Query.stringify(data);
     }
 
     const p = new Promise((resolve, reject) => {
       req.addEventListener('load', () => {
         const contentType = req.getResponseHeader('content-type')
         const res = req.responseText
-        if (!/json/.test(contentType)) {
-          resolve(res)
-          return
+
+        var data = res;
+        if (/urlencoded/.test(contentType)) {
+            data = req.responseText ? Query.parse(res) : {}
+            if (data.error) return reject(new Error(data.error_description))
         }
-        const data = req.responseText ? JSON.parse(res) : {}
-        if (data.message) {
-          reject(new Error(data.message))
-        } else {
-          resolve(data)
+        else if (/json/.test(contentType)) {
+            data = req.responseText ? JSON.parse(res) : {}
+            if (data.message) return reject(new Error(data.message))
         }
+        resolve(data)
       })
       req.addEventListener('error', error => reject(error))
     })
     req.open(method, url, true)
 
-    req.setRequestHeader('Accept', 'application/vnd.github.squirrel-girl-preview, application/vnd.github.html+json')
+    req.setRequestHeader('Accept', 'application/vnd.github.squirrel-girl-preview, application/vnd.github.html+json, application/x-www-form-urlencoded')
     if (token) {
       req.setRequestHeader('Authorization', `token ${token}`)
     }
     if (method !== 'GET' && method !== 'DELETE') {
-      body = JSON.stringify(data)
-      req.setRequestHeader('Content-Type', 'application/json')
+      if (isString(data)) {
+        body = data
+        req.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded')
+      }
+      else {
+        body = JSON.stringify(data)
+        req.setRequestHeader('Content-Type', 'application/json')
+      }
     }
 
     req.send(body)
