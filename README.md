@@ -20,12 +20,12 @@ which can be used in the frontend without any server-side implementation. Curren
 - Syntax highlighting
 - Notifications from GitHub
 - Easy to customize
-- ** No server-side implementation **
+- **No server-side implementation**
   - to choose both https://gh-oauth.imsun.net and [gh-oauth-server](https://github.com/imsun/gh-oauth-server), or
-  - ** php oauth proxy [intersect](https://github.com/aimingoo/intersect). **
-- ** Force redirect protocol to support HTTPS/HTTP Github pages site  **
-- ** Support urlencoded for GET request and response data **
-- ** No client_secret **
+  - **php oauth proxy [intersect](https://github.com/aimingoo/intersect).**
+- **Force redirect protocol to support HTTPS/HTTP Github pages site**
+- **Support urlencoded for GET request and response data**
+- **No client_secret**
 
 ## Get More
 
