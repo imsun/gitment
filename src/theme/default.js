@@ -30,6 +30,7 @@ function renderHeader({ meta, user, reactions }, instance) {
     likeButton.classList.remove('liked')
     likeButton.onclick = () => instance.like()
   }
+
   container.appendChild(likeButton)
 
   const commentsCount = document.createElement('span')
@@ -78,6 +79,7 @@ function renderComments({ meta, comments, commentReactions, currentPage, user, e
       initHint.appendChild(initButton)
       errorBlock.appendChild(initHint)
     } else {
+      console.log('error object',error);
       errorBlock.innerText = error
     }
     container.appendChild(errorBlock)
@@ -335,10 +337,10 @@ function render(state, instance) {
   const container = document.createElement('div')
   container.lang = "en-US"
   container.className = 'gitment-container gitment-root-container'
-  container.appendChild(instance.renderHeader(state, instance))
-  container.appendChild(instance.renderComments(state, instance))
-  container.appendChild(instance.renderEditor(state, instance))
-  container.appendChild(instance.renderFooter(state, instance))
+  container.appendChild(renderHeader(state, instance))
+  container.appendChild(renderComments(state, instance))
+  container.appendChild(renderEditor(state, instance))
+  container.appendChild(renderFooter(state, instance))
   return container
 }
 
