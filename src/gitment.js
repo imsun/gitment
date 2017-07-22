@@ -124,8 +124,7 @@ class Gitment {
 
   useTheme(theme = {}) {
     const renderers = Object.keys(theme)
-    renderers.forEach(renderer => this[renderer]=this.theme[renderer])
-    extendRenderer(this,'render')
+    renderers.forEach(renderer => extendRenderer(this,renderer))
   }
 
   update() {
