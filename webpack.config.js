@@ -7,7 +7,7 @@ module.exports = function (env) {
     devtool: 'source-map',
     output: {
       path: path.join(__dirname, 'dist'),
-      filename: (env&&env.production) ? 'gitment.browser.min.js' : 'gitment.browser.js',
+      filename: (env && env.production) ? 'gitment.browser.min.js' : 'gitment.browser.js',
       libraryTarget: 'var',
       library: 'Gitment',
     },
