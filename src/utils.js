@@ -1,6 +1,6 @@
 import { LS_ACCESS_TOKEN_KEY } from './constants'
 
-export const isString = s => toString.call(s) === '[object String]'
+export const isString = s => ({}).toString.call(s) === '[object String]'
 
 export function getTargetContainer(container) {
   let targetContainer
