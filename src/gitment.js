@@ -55,7 +55,7 @@ class Gitment {
       perPage: 20,
       maxCommentHeight: 250,
     }, options)
-    this.theme = Object.assign({},defaultTheme,options.theme);
+    this.theme = Object.assign({}, defaultTheme, options.theme)
     this.useTheme(this.theme)
 
     const user = {}
