@@ -336,10 +336,10 @@ function render(state, instance) {
   const container = document.createElement('div')
   container.lang = "en-US"
   container.className = 'gitment-container gitment-root-container'
-  container.appendChild(renderHeader(state, instance))
-  container.appendChild(renderComments(state, instance))
-  container.appendChild(renderEditor(state, instance))
-  container.appendChild(renderFooter(state, instance))
+  container.appendChild(instance.renderHeader(state, instance))
+  container.appendChild(instance.renderComments(state, instance))
+  container.appendChild(instance.renderEditor(state, instance))
+  container.appendChild(instance.renderFooter(state, instance))
   return container
 }
 

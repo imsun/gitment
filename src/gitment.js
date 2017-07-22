@@ -9,8 +9,7 @@ const scope = 'public_repo'
 function extendRenderer(instance, renderer) {
   instance[renderer] = (container) => {
     const targetContainer = getTargetContainer(container)
-    const render = instance.theme[renderer] || instance.defaultTheme[renderer]
-
+    const render = instance.theme[renderer]
     autorun(() => {
       const e = render(instance.state, instance)
       if (targetContainer.firstChild) {
@@ -46,20 +45,17 @@ class Gitment {
 
   constructor(options = {}) {
     this.defaultTheme = defaultTheme
-    this.useTheme(defaultTheme)
-
     Object.assign(this, {
       id: window.location.href,
       title: window.document.title,
       link: window.location.href,
       desc: '',
       labels: [],
-      theme: defaultTheme,
       oauth: {},
       perPage: 20,
       maxCommentHeight: 250,
     }, options)
-
+    this.theme = Object.assign({},defaultTheme,options.theme);
     this.useTheme(this.theme)
 
     const user = {}
@@ -127,10 +123,9 @@ class Gitment {
   }
 
   useTheme(theme = {}) {
-    this.theme = theme
-
-    const renderers = Object.keys(this.theme)
-    renderers.forEach(renderer => extendRenderer(this, renderer))
+    const renderers = Object.keys(theme)
+    renderers.forEach(renderer => this[renderer]=this.theme[renderer])
+    extendRenderer(this,'render')
   }
 
   update() {
