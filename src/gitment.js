@@ -187,6 +187,7 @@ class Gitment {
     return http.get(`/repos/${owner}/${repo}/issues`, {
         creator: owner,
         labels: id,
+        t:new Date().getTime(),
       })
       .then(issues => {
         if (!issues.length) return Promise.reject(NOT_INITIALIZED_ERROR)
