@@ -1,24 +1,24 @@
 {
-  "name": "gitment",
+  "name": "coding-comments",
   "version": "0.0.3",
-  "description": "A comment system based on GitHub Issues",
+  "description": "A comment system based on Coding Comments",
   "main": "./dist/gitment.js",
   "author": {
-    "name": "Shiquan Sun",
-    "url": "https://github.com/imsun"
+    "name": "Coding.net",
+    "url": "https://github.net/Coding"
   },
   "keywords": [
     "comment system",
-    "GitHub Issues"
+    "Coding.net"
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/imsun/gitment"
+    "url": "https://github.com/Coding/Comments"
   },
   "bugs": {
-    "url": "https://github.com/imsun/gitment/issues"
+    "url": "https://github.com/Coding/Comments/issues"
   },
-  "homepage": "https://github.com/imsun/gitment",
+  "homepage": "https://github.com/Coding/Comments",
   "scripts": {
     "build": "babel src --out-dir dist --ignore test.js --source-maps & NODE_ENV=production webpack --config webpack.config.js --progress --profile --colors",
     "dev": "webpack-dev-server --config webpack.dev.config.js --host 0.0.0.0 --progress --profile --colors"
@@ -34,5 +34,15 @@
   "dependencies": {
     "mobx": "^3.1.7"
   },
+  "contributors": [
+    {
+      "name": "Shiquan Sun",
+      "url": "https://github.com/imsun"
+    },
+    {
+      "name": "wusisu",
+      "url": "https://github.com/wusisu"
+    }
+  ],
   "license": "MIT"
 }
