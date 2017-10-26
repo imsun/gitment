@@ -185,10 +185,14 @@ class Gitment {
   loadMeta() {
     const { id, owner, repo } = this
     return http.get(`/repos/${owner}/${repo}/issues`, {
-        creator: owner,
         labels: id,
       })
       .then(issues => {
+        if (issues.length) {
+          let allowed = (admin || [owner]).map(x=>x.toLowerCase())
+          issues = issues.filter(issue => ~allowed.indexOf(issue.user.login.toLowerCase()))
+            .sort((left, right) => new Date(left.created_at) - new Date(right.created_at))
+        }
         if (!issues.length) return Promise.reject(NOT_INITIALIZED_ERROR)
         this.state.meta = issues[0]
         return issues[0]
