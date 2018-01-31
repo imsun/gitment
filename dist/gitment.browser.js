@@ -3492,8 +3492,8 @@ var Gitment = function () {
 
       return _utils.http.post('/repos/' + owner + '/' + repo + '/issues', {
         title: title,
-        labels: labels.concat(['gitment', id]),
-        body: link + '\n\n' + desc
+        labels: labels.concat(['gitment', decodeURI(id)]),
+        body: decodeURI(link) + '\n\n' + desc
       }).then(function (meta) {
         _this5.state.meta = meta;
         return meta;
@@ -3533,7 +3533,7 @@ var Gitment = function () {
 
       return _utils.http.get('/repos/' + owner + '/' + repo + '/issues', {
         creator: owner,
-        labels: id
+        labels: decodeURI(id)
       }).then(function (issues) {
         if (!issues.length) return Promise.reject(_constants.NOT_INITIALIZED_ERROR);
         _this7.state.meta = issues[0];
