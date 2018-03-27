@@ -81,7 +81,7 @@ gitment.render('comments')
 
 ### 4. Initialize Your Comments
 
-After the page published, you should visit your page, login with your GitHub account(make sure you're repo's owner), and click the initialize button, to create a related issue in your repo.
+After the page is published, you should visit your page, login with your GitHub account(make sure you're repo's owner), and click the initialize button, to create a related issue in your repo.
 After that, others can leave their comments.
    
 ## Methods
@@ -209,12 +209,12 @@ You can inspect the DOM structure in the browser and write your own styles.
 A Gitment theme is an object contains several render functions.
  
 By default Gitment has five render functions: `render`, `renderHeader`, `renderComments`, `renderEditor`, `renderFooter`.
-The last four render independent components and `render` function renders them together.
+The last four render independent components and `render` functions render them together.
 All of them can be used independently.
 
 You can override any render function above or write your own render function.
 
-For example, you can override the `render` function to put editor before comments list, and render a new component.
+For example, you can override the `render` function to put an editor before the comment list, and render a new component.
 
 ```javascript
 const myTheme = {
@@ -284,9 +284,9 @@ If you find a way to hack it, please [open an issue](https://github.com/imsun/gi
 ### Why does Gitment send a request to gh-oauth.imsun.net?
 
 [https://gh-oauth.imsun.net](https://gh-oauth.imsun.net) is an simple open-source service to proxy [one request](https://developer.github.com/v3/oauth/#2-github-redirects-back-to-your-site) during users logging in.
-Because GitHub does't attach a CORS header to it.
+Because GitHub doesn't attach a CORS header to it.
 
-This service won't record or store anything, only proxy and attach a CORS header to that request.
+This service won't record or store anything. It only attaches a CORS header to that request and provides proxy.
 So that users can login in the frontend without any server-side implementation.
 
 For more details, checkout [this project](https://github.com/imsun/gh-oauth-server).
