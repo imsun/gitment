@@ -30,6 +30,7 @@ function renderHeader({ meta, user, reactions }, instance) {
     likeButton.classList.remove('liked')
     likeButton.onclick = () => instance.like()
   }
+
   container.appendChild(likeButton)
 
   const commentsCount = document.createElement('span')
