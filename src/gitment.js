@@ -305,7 +305,21 @@ class Gitment {
         this.state.meta.reactions.heart--
       })
   }
-
+  sync() {
+    if (!this.accessToken) {
+      alert('Login to Synchronize')
+      return Promise.reject()
+    }
+    const { owner, repo, title, desc, link } = this
+    return http.patch(`/repos/${owner}/${repo}/issues/${this.state.meta.number}`, {
+      title,
+      body: `${link}\n\n${desc}`
+    }).then((meta) => {
+      alert('Synchronize success')
+      this.state.meta = meta
+      return meta
+    })
+  }
   likeAComment(commentId) {
     if (!this.accessToken) {
       alert('Login to Like')

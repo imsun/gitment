@@ -1,11 +1,23 @@
-import { github as githubIcon, heart as heartIcon, spinner as spinnerIcon } from '../icons'
+import { github as githubIcon, heart as heartIcon, spinner as spinnerIcon, refresh as refreshIcon } from '../icons'
 import { NOT_INITIALIZED_ERROR } from '../constants'
 
-function renderHeader({ meta, user, reactions }, instance) {
+function renderHeader(state, instance) {
+  let like = renderLike(state, instance)
+  let sync = renderSync(state, instance)
+  let commentsCount = renderCommentsCount(state, instance)
+  let issueLink = renderIssueLink(state, instance)
   const container = document.createElement('div')
   container.lang = "en-US"
   container.className = 'gitment-container gitment-header-container'
+  container.appendChild(like)
+  container.appendChild(sync)
+  container.appendChild(commentsCount)
+  container.appendChild(issueLink)
 
+  return container
+}
+
+function renderLike ({ meta, user, reactions }, instance) {
   const likeButton = document.createElement('span')
   const likedReaction = reactions.find(reaction => (
     reaction.content === 'heart' && reaction.user.login === user.login
@@ -14,12 +26,12 @@ function renderHeader({ meta, user, reactions }, instance) {
   likeButton.innerHTML = `
     ${heartIcon}
     ${ likedReaction
-      ? 'Unlike'
-      : 'Like'
+    ? 'Unlike'
+    : 'Like'
     }
     ${ meta.reactions && meta.reactions.heart
-      ? ` • <strong>${meta.reactions.heart}</strong> Liked`
-      : ''
+    ? ` • <strong>${meta.reactions.heart}</strong> Liked`
+    : ''
     }
   `
 
@@ -30,8 +42,17 @@ function renderHeader({ meta, user, reactions }, instance) {
     likeButton.classList.remove('liked')
     likeButton.onclick = () => instance.like()
   }
-  container.appendChild(likeButton)
+  return likeButton
+}
+function renderSync ({ meta, user, reactions }, instance) {
+  const btn = document.createElement('span')
+  btn.className = 'gitment-header-like-btn'
+  btn.innerHTML = `${refreshIcon}Sync`
 
+  btn.onclick = () => instance.sync()
+  return btn
+}
+function renderCommentsCount ({ meta, user, reactions }, instance) {
   const commentsCount = document.createElement('span')
   commentsCount.innerHTML = `
     ${ meta.comments
@@ -39,16 +60,15 @@ function renderHeader({ meta, user, reactions }, instance) {
     : ''
     }
   `
-  container.appendChild(commentsCount)
-
+  return commentsCount
+}
+function renderIssueLink ({ meta, user, reactions }, instance) {
   const issueLink = document.createElement('a')
   issueLink.className = 'gitment-header-issue-link'
   issueLink.href = meta.html_url
   issueLink.target = '_blank'
   issueLink.innerText = 'Issue Page'
-  container.appendChild(issueLink)
-
-  return container
+  return issueLink
 }
 
 function renderComments({ meta, comments, commentReactions, currentPage, user, error }, instance) {
