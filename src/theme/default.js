@@ -9,8 +9,8 @@ function renderHeader(state, instance) {
   const container = document.createElement('div')
   container.lang = "en-US"
   container.className = 'gitment-container gitment-header-container'
-  container.appendChild(like)
   container.appendChild(sync)
+  container.appendChild(like)
   container.appendChild(commentsCount)
   container.appendChild(issueLink)
 
