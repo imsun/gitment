@@ -43,7 +43,7 @@ function renderHeader({ meta, user, reactions }, instance) {
 
   const issueLink = document.createElement('a')
   issueLink.className = 'gitment-header-issue-link'
-  issueLink.href = meta.html_url
+  issueLink.href = meta.html_url || `//github.com/${instance.owner}/${instance.repo}/issues`
   issueLink.target = '_blank'
   issueLink.innerText = 'Issue Page'
   container.appendChild(issueLink)
