@@ -85,4 +85,5 @@ export const http = {
   post: ajaxFactory('POST'),
   delete: ajaxFactory('DELETE'),
   put: ajaxFactory('PUT'),
+  patch: ajaxFactory('PATCH'),
 }
