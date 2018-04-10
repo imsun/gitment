@@ -215,7 +215,8 @@ a.gitment-comment-name:visited {
   white-space: nowrap;
   cursor: pointer;
   user-select: none;
-
+  -webkit-user-select: none;
+  
   outline: none;
 }
 
