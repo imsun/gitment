@@ -40,6 +40,16 @@ which can be used in the frontend without any server-side implementation.
 <script src="https://imsun.github.io/gitment/dist/gitment.browser.js"></script>
 ```
 
+or via CDN:
+
+```html
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitment/style/default.css">
+```
+
+```html
+<script src="https://cdn.jsdelivr.net/npm/gitment/dist/gitment.browser.js"></script>
+```
+
 or via npm:
 
 ```sh
