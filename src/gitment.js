@@ -99,7 +99,7 @@ class Gitment {
       }, options)
 
       this.state.user.isLoggingIn = true
-      http.post('https://gh-oauth.imsun.net', {
+      http.post('https://github.com/login/oauth/access_token', {
           code,
           client_id,
           client_secret,
