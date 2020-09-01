@@ -66,13 +66,19 @@ function ajaxFactory(method) {
     })
     req.open(method, url, true)
 
-    req.setRequestHeader('Accept', 'application/vnd.github.squirrel-girl-preview, application/vnd.github.html+json')
+    
     if (token) {
       req.setRequestHeader('Authorization', `token ${token}`)
     }
     if (method !== 'GET' && method !== 'DELETE') {
       body = JSON.stringify(data)
       req.setRequestHeader('Content-Type', 'application/json')
+    }
+    if(apiPath=='https://gitment.jermey.cn/login/oauth/access_token'){
+      req.setRequestHeader('Accept','application/json')
+    }
+    else{
+      req.setRequestHeader('Accept', 'application/vnd.github.squirrel-girl-preview, application/vnd.github.html+json')
     }
 
     req.send(body)
