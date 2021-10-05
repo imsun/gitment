@@ -290,3 +290,5 @@ This service won't record or store anything. It only attaches a CORS header to t
 So that users can login in the frontend without any server-side implementation.
 
 For more details, checkout [this project](https://github.com/imsun/gh-oauth-server).
+
+Thank you!
